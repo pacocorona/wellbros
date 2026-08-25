@@ -1,7 +1,15 @@
 "use server";
 
 /**
- * Acciones de /perfil.
+ * Acciones que una persona ejecuta sobre su propia cuenta: editar sus datos,
+ * cambiar su contraseña y cerrar su sesión.
+ *
+ * Nacieron para /perfil y siguen siendo el motor de esa pantalla, pero
+ * /cambiar-contrasena —el cambio obligatorio del primer acceso— se apoya en dos
+ * de ellas: `cambiarContrasenaPrimerAccesoAction`, que no es más que
+ * `cambiarContrasenaAction` con otro destino al terminar, y `cerrarSesionAction`,
+ * que allí es la única salida posible y que vive aquí para no tener dos copias
+ * del cierre de sesión con su anotación en la bitácora.
  *
  * Reparto de responsabilidades, igual que en el resto del proyecto: la ACCIÓN
  * resuelve la sesión (es la única que puede: `cookies()` solo existe aquí) y
@@ -22,10 +30,16 @@
 
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { writeAudit } from "@/lib/audit";
-import { getCurrentSession } from "@/lib/auth";
+import {
+  clearSessionCookie,
+  destroySession,
+  getCurrentSession,
+  getSessionCookie,
+} from "@/lib/auth";
 import type { Db } from "@/lib/db";
 import { prisma } from "@/lib/db";
 import { changeOwnPassword, isAdminError } from "@/server/admin/users";
@@ -53,6 +67,18 @@ export interface ContrasenaFormState {
   /** Sesiones cerradas en OTROS dispositivos. La interfaz lo anuncia. */
   sesionesCerradas: number;
 }
+
+/**
+ * Señal en la URL con la que el calendario sabe que hay que lanzar el aviso de
+ * «contraseña cambiada» tras el primer acceso.
+ *
+ * Duplicadas a propósito en `@/components/force-password-form`, que es quien
+ * las lee: este módulo es "use server" y solo puede exportar funciones
+ * asíncronas, así que las constantes no pueden viajar de aquí a allá. Si
+ * cambian aquí, cambian allá.
+ */
+const PARAM_AVISO = "aviso";
+const AVISO_CONTRASENA_CAMBIADA = "contrasena-cambiada";
 
 // ═════════════════════════════════════════════════════ validación
 
@@ -376,4 +402,74 @@ export async function cambiarContrasenaAction(
       sesionesCerradas: 0,
     };
   }
+}
+
+/**
+ * El mismo cambio de contraseña, pero para /cambiar-contrasena: al terminar
+ * lleva al calendario en vez de quedarse en la pantalla.
+ *
+ * Envuelve a `cambiarContrasenaAction` y no la copia: la operación, la
+ * validación y los mensajes de error son idénticos —lo único distinto es a
+ * dónde va la persona—, y dos copias de esto acabarían divergiendo justo en el
+ * camino que menos se prueba a mano.
+ *
+ * El destino lo decide el SERVIDOR y no un efecto en el cliente, que fue la
+ * primera versión y falló: con el indicador ya apagado, cualquier cosa que
+ * rehaga la pantalla antes de que corra el efecto —una revalidación bastó— se
+ * lleva por delante el destino Y el aviso, y la persona aterriza en otro sitio
+ * sin que nada le diga que su contraseña cambió. Un `redirect` desde la acción
+ * no compite con nadie. Ninguna prueba automática habría visto esa carrera.
+ */
+export async function cambiarContrasenaPrimerAccesoAction(
+  previo: ContrasenaFormState,
+  formData: FormData,
+): Promise<ContrasenaFormState> {
+  const resultado = await cambiarContrasenaAction(previo, formData);
+
+  // Los fallos se quedan en la pantalla, con su error por campo.
+  if (!resultado.ok) return resultado;
+
+  // `redirect` funciona lanzando una excepción de control: fuera de cualquier
+  // try/catch, o se tragaría la navegación. El parámetro no es un mensaje: solo
+  // una señal para que el calendario lance el aviso y la borre de la URL (ver
+  // `AvisoDeContrasenaCambiada`, en @/components/force-password-form).
+  redirect(`/?${PARAM_AVISO}=${AVISO_CONTRASENA_CAMBIADA}`);
+}
+
+/**
+ * Cierra la sesión de ESTE dispositivo (no las demás) y anota LOGOUT.
+ *
+ * La usan la barra de navegación del grupo autenticado y la pantalla de cambio
+ * obligatorio de contraseña, donde es la única salida.
+ *
+ * Se anota ANTES de borrar: si la bitácora falla, no ha pasado nada y no hay
+ * hecho sin registrar. No comparten transacción porque `destroySession` es del
+ * contrato de @/lib/auth y trabaja con el cliente global; borrar la fila a mano
+ * aquí exigiría duplicar el hash del token, que es interno a ese módulo.
+ *
+ * La cookie se borra pase lo que pase con la fila: quien pulsó «salir» queda
+ * fuera, y una sesión huérfana la barre `purgeExpiredSessions`.
+ */
+export async function cerrarSesionAction(): Promise<void> {
+  const token = await getSessionCookie();
+  const sesion = await getCurrentSession();
+
+  if (token && sesion) {
+    const cabeceras = await headers();
+    await writeAudit(prisma, {
+      action: "LOGOUT",
+      entityType: "SESSION",
+      entityId: sesion.sessionId,
+      actorUserId: sesion.user.id,
+      details: { email: sesion.user.email },
+      ip: clientIpFromHeaders(cabeceras),
+    });
+    await destroySession(token);
+  }
+
+  await clearSessionCookie();
+
+  // `redirect` funciona lanzando una excepción de control: tiene que quedar
+  // fuera de cualquier try/catch o se tragaría la navegación.
+  redirect("/login");
 }

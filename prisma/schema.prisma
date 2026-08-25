@@ -96,6 +96,11 @@ model User {
   /// 'light' | 'dark' | 'system'
   theme        String   @default("system") @db.VarChar(10)
   isActive     Boolean  @default(true) @map("is_active")
+  /// La contraseña vigente la eligió OTRA persona (la semilla, o un alta desde
+  /// Configuración con contraseña temporal). Mientras sea true, el layout del
+  /// grupo (app) no deja navegar a ninguna pantalla que no sea
+  /// /cambiar-contrasena. Lo apaga `changeOwnPassword`, en su transacción.
+  mustChangePassword Boolean @default(false) @map("must_change_password")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 

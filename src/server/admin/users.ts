@@ -381,6 +381,12 @@ export async function createUser({
         phone: datos.phone ?? null,
         whatsappOptIn: datos.whatsappOptIn,
         role: datos.role,
+        // Solo con contraseña temporal. Es la única de las dos entregas en la
+        // que alguien más llega a saber la contraseña —hay que dictarla— y por
+        // tanto la única que hay que obligar a cambiar. Con invitación, la
+        // contraseña inicial es un valor aleatorio que nadie ha visto nunca y
+        // quien abre la cuenta ya elige la suya en el enlace.
+        mustChangePassword: temporal !== null,
       },
       select: SELECCION_USUARIO,
     });
@@ -722,6 +728,19 @@ const cambioContrasenaSchema = z.object({
 /**
  * Cambio de contraseña propio. NO exige SUPERUSER: cualquiera la cambia, pero
  * solo la suya —el actor es el sujeto de la operación—.
+ *
+ * Sirve a los dos caminos que hay para cambiarla: el voluntario de /perfil y el
+ * OBLIGATORIO de /cambiar-contrasena, la pantalla de la que no se sale mientras
+ * `mustChangePassword` siga encendido. Es la misma operación y por eso es la
+ * misma función; lo único que cambia es a dónde va la persona al terminar.
+ *
+ * Y en los DOS se exige la contraseña actual, también en el primer acceso.
+ * Saltársela ahí era tentador —quien acaba de entrar la escribió hace diez
+ * segundos— pero abriría un agujero real: cualquiera que encuentre la sesión
+ * abierta (un teléfono sin bloquear, una computadora prestada, un navegador
+ * compartido) podría cambiar la contraseña SIN conocer la anterior y quedarse
+ * con la cuenta, expulsando a su dueña. Pedirla cuesta un campo más y convierte
+ * ese robo en imposible sin el dato que solo ella tiene.
  */
 export async function changeOwnPassword({
   db,
@@ -761,7 +780,14 @@ export async function changeOwnPassword({
   const passwordHash = await hashPassword(datos.newPassword);
 
   return db.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: usuario.id }, data: { passwordHash } });
+    // El apagado del indicador va en el MISMO UPDATE que el hash: son el mismo
+    // hecho —«esta contraseña ya la eligió su dueña»— y separarlos permitiría
+    // que una fallara sin la otra, dejando a alguien encerrado en la pantalla
+    // de cambio con la contraseña ya cambiada, o suelto con la dictada intacta.
+    await tx.user.update({
+      where: { id: usuario.id },
+      data: { passwordHash, mustChangePassword: false },
+    });
 
     // El borrado va en la MISMA transacción (y no por `destroyAllSessions`, que
     // usa el cliente global y las cerraría todas): si el UPDATE se deshace, las

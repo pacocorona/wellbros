@@ -11,56 +11,19 @@
  * El grupo (app) no añade segmento a la URL: "/" sigue siendo "/".
  */
 
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
 import { AppNav } from "@/components/app-nav";
+import { AvisoDeContrasenaCambiada } from "@/components/force-password-form";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import {
-  clearSessionCookie,
-  destroySession,
-  getCurrentSession,
-  getSessionCookie,
-} from "@/lib/auth";
-import { writeAudit } from "@/lib/audit";
-import { clientIpFromHeaders } from "@/server/auth/login";
-import { prisma } from "@/lib/db";
-import { headers } from "next/headers";
-
-/**
- * Cierra la sesión de este dispositivo (no las demás) y anota LOGOUT.
- *
- * Se anota ANTES de borrar: si la bitácora falla, no ha pasado nada y no hay
- * hecho sin registrar. No comparten transacción porque `destroySession` es
- * del contrato de @/lib/auth y trabaja con el cliente global; borrar la fila
- * a mano aquí exigiría duplicar el hash del token, que es interno a ese
- * módulo.
- *
- * La cookie se borra pase lo que pase con la fila: quien pulsó "salir" queda
- * fuera, y una sesión huérfana la barre `purgeExpiredSessions`.
- */
-async function cerrarSesion(): Promise<void> {
-  "use server";
-
-  const token = await getSessionCookie();
-  const sesion = await getCurrentSession();
-
-  if (token && sesion) {
-    const cabeceras = await headers();
-    await writeAudit(prisma, {
-      action: "LOGOUT",
-      entityType: "SESSION",
-      entityId: sesion.sessionId,
-      actorUserId: sesion.user.id,
-      details: { email: sesion.user.email },
-      ip: clientIpFromHeaders(cabeceras),
-    });
-    await destroySession(token);
-  }
-
-  await clearSessionCookie();
-  redirect("/login");
-}
+import { getCurrentSession } from "@/lib/auth";
+// El cierre de sesión vive en @/server/actions/profile-actions y no aquí porque
+// /cambiar-contrasena —que está FUERA de este grupo, ver más abajo— también lo
+// necesita, y era la única salida de esa pantalla: dos copias de «anota LOGOUT,
+// borra la sesión, borra la cookie» habrían acabado divergiendo.
+import { cerrarSesionAction } from "@/server/actions/profile-actions";
 
 export default async function AppLayout({
   children,
@@ -80,6 +43,18 @@ export default async function AppLayout({
 
   const { user } = sesion;
 
+  // Puerta del primer acceso. Quien entró con una contraseña que le dictaron no
+  // navega a ninguna parte hasta cambiarla.
+  //
+  // No hace falta comprobar en qué ruta estamos —cosa que un layout de servidor
+  // ni siquiera puede saber— porque /cambiar-contrasena vive FUERA del grupo
+  // (app): este layout no la envuelve y por tanto nunca se ejecuta durante su
+  // render. Si la página estuviera dentro del grupo, esta línea se redirigiría
+  // a sí misma en un bucle infinito.
+  if (user.mustChangePassword) {
+    redirect("/cambiar-contrasena");
+  }
+
   return (
     // Un ÚNICO TooltipProvider para todo el grupo autenticado, igual que el
     // Toaster. Es lo que hace que los globos compartan el retardo de apertura:
@@ -90,7 +65,7 @@ export default async function AppLayout({
         <AppNav
           nombre={user.fullName}
           esSuperusuaria={user.role === "SUPERUSER"}
-          cerrarSesion={cerrarSesion}
+          cerrarSesion={cerrarSesionAction}
         />
 
         {/* El relleno inferior en móvil deja sitio a la barra fija; en
@@ -103,6 +78,13 @@ export default async function AppLayout({
             en móvil la barra de navegación ocupa el borde inferior y un aviso
             ahí quedaría medio tapado. */}
         <Toaster position="top-center" />
+
+        {/* Después del Toaster, que es quien lo pinta. Lee `?aviso=` de la URL
+            y no dibuja nada; el `Suspense` lo exige Next para cualquier
+            componente que use `useSearchParams`. */}
+        <Suspense fallback={null}>
+          <AvisoDeContrasenaCambiada />
+        </Suspense>
       </div>
     </TooltipProvider>
   );

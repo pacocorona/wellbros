@@ -6,8 +6,27 @@
  * Es IDEMPOTENTE: correrlo dos veces no duplica nada y —sobre todo— no
  * reescribe la contraseña del superusuario si ya existe.
  *
- * No crea reservas de ejemplo a propósito: las reservas son el registro real de
- * quién usa la casa, y una reserva falsa en producción es una discusión familiar.
+ * QUÉ CREA, POR OMISIÓN: la superusuaria y NADA MÁS. Es lo que hace falta en el
+ * servidor de producción, donde las propiedades reales las da de alta ella
+ * misma desde la aplicación.
+ *
+ * Variables de entorno (todas opcionales):
+ *
+ *   SEED_SUPERUSER_EMAIL     correo de la superusuaria (por omisión, el de Ivonne)
+ *   SEED_SUPERUSER_NAME      su nombre completo
+ *   SEED_SUPERUSER_PASSWORD  su contraseña inicial. VACÍA cuenta como no puesta:
+ *                            se genera una aleatoria y se imprime UNA sola vez.
+ *   SEED_DEMO_DATA=true      añade además 2 propiedades y 21 semanas por cada
+ *                            una, para tener algo que mirar en desarrollo.
+ *                            Cualquier otro valor —incluido vacío— no las crea.
+ *
+ * Sea cual sea la contraseña inicial, la superusuaria nace con
+ * `mustChangePassword` encendido: la eligió esta semilla, no ella, y la
+ * aplicación la obliga a cambiarla antes de dejarla navegar.
+ *
+ * No crea reservas de ejemplo ni siquiera con SEED_DEMO_DATA: las reservas son
+ * el registro real de quién usa la casa, y una reserva falsa es una discusión
+ * familiar esperando a ocurrir.
  */
 
 import "dotenv/config";
@@ -33,6 +52,17 @@ const SUPERUSUARIO_EMAIL =
   process.env.SEED_SUPERUSER_EMAIL?.trim() || "ibuenfil@hotmail.com";
 const SUPERUSUARIO_NOMBRE =
   process.env.SEED_SUPERUSER_NAME?.trim() || "Ivonne Buenfil";
+
+/**
+ * Datos de ejemplo: dos propiedades y sus semanas.
+ *
+ * Van detrás de una variable EXPLÍCITA porque en producción son basura que
+ * alguien tendría que borrar a mano —y borrar una propiedad con semanas abiertas
+ * no es un clic—, mientras que en desarrollo son justo lo que hace falta para
+ * ver el calendario con algo dentro. Se exige el literal «true» y no cualquier
+ * valor: un `SEED_DEMO_DATA=false` mal entendido no debe sembrar nada.
+ */
+const SEMBRAR_DEMO = process.env.SEED_DEMO_DATA?.trim().toLowerCase() === "true";
 
 /** Semanas que se abren hacia atrás y hacia adelante del viernes en curso. */
 const SEMANAS_ATRAS = 4;
@@ -120,7 +150,13 @@ async function asegurarSuperusuario(prisma: PrismaClient): Promise<string> {
     return otroAdmin.id;
   }
 
-  const provista = process.env.SEED_SUPERUSER_PASSWORD;
+  // `?.trim() || undefined` y no `??`, igual que EMAIL y NAME. Con `??` una
+  // cadena VACÍA —que es exactamente lo que trae .env.example— pasaba intacta y
+  // la superusuaria quedaba creada con la contraseña vacía: imposible de usar,
+  // porque el formulario de acceso exige al menos un carácter, y sin ningún
+  // flujo de recuperación con el que salir del atolladero. La única salida era
+  // borrar la fila a mano en la base.
+  const provista = process.env.SEED_SUPERUSER_PASSWORD?.trim() || undefined;
   const contrasena = provista ?? contrasenaAleatoria();
   const passwordHash = await hash(contrasena, ARGON2);
 
@@ -130,11 +166,15 @@ async function asegurarSuperusuario(prisma: PrismaClient): Promise<string> {
       fullName: SUPERUSUARIO_NOMBRE,
       passwordHash,
       role: "SUPERUSER",
+      // Venga de SEED_SUPERUSER_PASSWORD o del generador, esta contraseña la
+      // eligió la semilla y no su dueña: hay que cambiarla al primer acceso.
+      mustChangePassword: true,
     },
     select: { id: true },
   });
 
   salida(`· Superusuario creado: ${SUPERUSUARIO_EMAIL}`);
+  salida("  La aplicación le exigirá cambiar la contraseña en su primer acceso.");
 
   if (!provista) {
     // Se imprime UNA sola vez y nunca se guarda en claro: si se pierde, hay que
@@ -146,8 +186,9 @@ async function asegurarSuperusuario(prisma: PrismaClient): Promise<string> {
     salida(`      ${contrasena}`);
     salida("  ───────────────────────────────────────────────────────────");
     salida();
-    salida("  Cámbiala al primer acceso. Para fijarla tú, exporta");
-    salida("  SEED_SUPERUSER_PASSWORD antes de correr la semilla.");
+    salida("  Sirve para entrar una vez: la aplicación pedirá cambiarla ahí");
+    salida("  mismo. Para fijarla tú, exporta SEED_SUPERUSER_PASSWORD antes");
+    salida("  de correr la semilla.");
     salida();
   }
 
@@ -198,30 +239,36 @@ async function main(): Promise<void> {
 
     const superusuarioId = await asegurarSuperusuario(prisma);
 
-    const ancla = viernesEnCurso(new Date());
-    const viernes: string[] = [];
-    for (let i = -SEMANAS_ATRAS; i <= SEMANAS_ADELANTE; i += 1) {
-      viernes.push(fechaISO(addDays(ancla, i * 7) as TZDate));
-    }
+    if (SEMBRAR_DEMO) {
+      const ancla = viernesEnCurso(new Date());
+      const viernes: string[] = [];
+      for (let i = -SEMANAS_ATRAS; i <= SEMANAS_ADELANTE; i += 1) {
+        viernes.push(fechaISO(addDays(ancla, i * 7) as TZDate));
+      }
 
-    for (const nombre of PROPIEDADES) {
-      const propiedad = await prisma.property.upsert({
-        where: { name: nombre },
-        update: {},
-        create: { name: nombre },
-        select: { id: true },
-      });
+      for (const nombre of PROPIEDADES) {
+        const propiedad = await prisma.property.upsert({
+          where: { name: nombre },
+          update: {},
+          create: { name: nombre },
+          select: { id: true },
+        });
 
-      const nuevas = await abrirSemanas(
-        prisma,
-        propiedad.id,
-        superusuarioId,
-        viernes,
-      );
+        const nuevas = await abrirSemanas(
+          prisma,
+          propiedad.id,
+          superusuarioId,
+          viernes,
+        );
 
-      salida(
-        `· ${nombre}: ${nuevas} semana(s) nueva(s) de ${viernes.length} (${viernes[0]} → ${viernes[viernes.length - 1]})`,
-      );
+        salida(
+          `· ${nombre}: ${nuevas} semana(s) nueva(s) de ${viernes.length} (${viernes[0]} → ${viernes[viernes.length - 1]})`,
+        );
+      }
+    } else {
+      // Se dice en voz alta: quien esperaba ver el calendario poblado en
+      // desarrollo debe enterarse aquí, no buscando el fallo media hora.
+      salida("· Sin datos de ejemplo. Para crearlos: SEED_DEMO_DATA=true");
     }
 
     const [usuarios, propiedades, semanas] = await Promise.all([

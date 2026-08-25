@@ -221,6 +221,7 @@ export async function login(db: Db, input: LoginInput): Promise<LoginResult> {
       whatsappOptIn: true,
       role: true,
       theme: true,
+      mustChangePassword: true,
       isActive: true,
       passwordHash: true,
     },
@@ -298,6 +299,9 @@ export async function login(db: Db, input: LoginInput): Promise<LoginResult> {
     whatsappOptIn: usuario.whatsappOptIn,
     role: usuario.role,
     theme: usuario.theme,
+    // Quien entra con una contraseña que le dictaron llega aquí con el
+    // indicador encendido; la puerta que lo lee es src/app/(app)/layout.tsx.
+    mustChangePassword: usuario.mustChangePassword,
   };
 
   return { ok: true, user, session };

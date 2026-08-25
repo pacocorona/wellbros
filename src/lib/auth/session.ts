@@ -86,6 +86,13 @@ export interface SessionUser {
   whatsappOptIn: boolean;
   role: UserRole;
   theme: string;
+  /**
+   * La contraseña vigente la puso otra persona. Es la puerta que lee
+   * `src/app/(app)/layout.tsx` para mandar a /cambiar-contrasena, así que viaja
+   * en la sesión y no se consulta aparte: si costara una consulta extra, la
+   * tentación sería comprobarlo solo en algunas pantallas.
+   */
+  mustChangePassword: boolean;
 }
 
 export interface SessionContext {
@@ -114,6 +121,7 @@ const SESSION_USER_SELECT = {
   whatsappOptIn: true,
   role: true,
   theme: true,
+  mustChangePassword: true,
   isActive: true,
 } as const;
 
@@ -213,6 +221,7 @@ export async function getSessionFromToken(
     whatsappOptIn: session.user.whatsappOptIn,
     role: session.user.role,
     theme: session.user.theme,
+    mustChangePassword: session.user.mustChangePassword,
   };
 
   return { user, sessionId: session.id, expiresAt: session.expiresAt };
