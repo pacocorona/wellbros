@@ -1,0 +1,25 @@
+[Unit]
+Description=Wellbros (worker de la cola de notificaciones)
+After=network.target postgresql.service wellbros.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=wellbros
+Group=wellbros
+WorkingDirectory=/srv/wellbros/app
+EnvironmentFile=/srv/wellbros/shared/.env
+# Proceso aparte de la web: un fallo de envio de correo no debe afectar
+# a las peticiones de los usuarios, ni al reves.
+ExecStart=/usr/bin/node node_modules/.bin/tsx src/lib/notifications/worker.ts
+Restart=always
+RestartSec=15
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/srv/wellbros
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

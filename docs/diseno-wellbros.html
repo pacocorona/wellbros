@@ -1,0 +1,1137 @@
+<title>Plano Wellbros</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg: #F6F4EE;
+    --surface: #FFFFFF;
+    --surface-2: #EFECE3;
+    --ink: #202B36;
+    --muted: #63707D;
+    --line: #E0DCD0;
+    --accent: #0E7490;
+    --accent-ink: #0B5E75;
+    --accent-soft: #DCEEF2;
+    --warn-soft: #FBEED3;
+    --warn-ink: #92610A;
+    --code-bg: #16222E;
+    --code-ink: #D9E4EE;
+    --code-hi: #8BD7E4;
+    --st-noslot-bg: #F0EDE4;  --st-noslot-fg: #A3A899;
+    --st-open-bg: #DCF5E3;    --st-open-bd: #2F9E5B;  --st-open-fg: #1B6B3C;
+    --st-mine-bg: #DBEAFE;    --st-mine-bd: #2563EB;  --st-mine-fg: #1E40AF;
+    --st-other-bg: #ECE7F9;   --st-other-bd: #7C5CD6; --st-other-fg: #55349E;
+    --st-ceded-bg: #CDF2EA;   --st-ceded-bd: #0D9488; --st-ceded-fg: #0F5E56;
+    --st-maint-bg: #FCEEC8;   --st-maint-fg: #A16207;
+    --st-sched-bg: #E9EDF3;   --st-sched-bd: #90A0B4;  --st-sched-fg: #4E5F76;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E1621;
+      --surface: #16212E;
+      --surface-2: #1B2836;
+      --ink: #E6EDF4;
+      --muted: #8DA0B2;
+      --line: #27384A;
+      --accent: #3FC1D3;
+      --accent-ink: #6AD3E2;
+      --accent-soft: #113A47;
+      --warn-soft: #3A2B0C;
+      --warn-ink: #EAC26B;
+      --code-bg: #0B121B;
+      --code-ink: #CFDDE9;
+      --code-hi: #7DD3E0;
+      --st-noslot-bg: #131D29;  --st-noslot-fg: #55636F;
+      --st-open-bg: #0B3320;    --st-open-bd: #34C56F;  --st-open-fg: #8FE7B4;
+      --st-mine-bg: #102C5C;    --st-mine-bd: #4C8DF6;  --st-mine-fg: #A3C6FB;
+      --st-other-bg: #291B4E;   --st-other-bd: #9B7BF0; --st-other-fg: #CBB8F8;
+      --st-ceded-bg: #062F2B;   --st-ceded-bd: #23BBA7; --st-ceded-fg: #7FE6D6;
+      --st-maint-bg: #392A08;   --st-maint-fg: #EFC257;
+      --st-sched-bg: #172230;   --st-sched-bd: #46586D;  --st-sched-fg: #93A6BC;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E1621;
+    --surface: #16212E;
+    --surface-2: #1B2836;
+    --ink: #E6EDF4;
+    --muted: #8DA0B2;
+    --line: #27384A;
+    --accent: #3FC1D3;
+    --accent-ink: #6AD3E2;
+    --accent-soft: #113A47;
+    --warn-soft: #3A2B0C;
+    --warn-ink: #EAC26B;
+    --code-bg: #0B121B;
+    --code-ink: #CFDDE9;
+    --code-hi: #7DD3E0;
+    --st-noslot-bg: #131D29;  --st-noslot-fg: #55636F;
+    --st-open-bg: #0B3320;    --st-open-bd: #34C56F;  --st-open-fg: #8FE7B4;
+    --st-mine-bg: #102C5C;    --st-mine-bd: #4C8DF6;  --st-mine-fg: #A3C6FB;
+    --st-other-bg: #291B4E;   --st-other-bd: #9B7BF0; --st-other-fg: #CBB8F8;
+    --st-ceded-bg: #062F2B;   --st-ceded-bd: #23BBA7; --st-ceded-fg: #7FE6D6;
+    --st-maint-bg: #392A08;   --st-maint-fg: #EFC257;
+    --st-sched-bg: #172230;   --st-sched-bd: #46586D;  --st-sched-fg: #93A6BC;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+    font-size: 1.02rem;
+    line-height: 1.68;
+    margin: 0;
+    padding: 0 1.25rem 5rem;
+  }
+  .wrap { max-width: 56rem; margin: 0 auto; }
+
+  h1, h2, h3, h4 { font-family: "Bricolage Grotesque", "Segoe UI", Arial, sans-serif; text-wrap: balance; }
+  .eyebrow {
+    font-family: "JetBrains Mono", Consolas, monospace;
+    font-size: .72rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent-ink); margin: 0 0 .8rem;
+  }
+  header.hero { padding: 4rem 0 2.2rem; border-bottom: 1px solid var(--line); }
+  h1 { font-size: clamp(2.6rem, 6vw, 3.6rem); font-weight: 800; margin: 0 0 .6rem; letter-spacing: -.02em; }
+  .lede { font-size: 1.16rem; max-width: 46rem; margin: 0 0 1.6rem; }
+  .lede strong { font-weight: 600; }
+
+  .weekstrip { display: flex; gap: 4px; align-items: stretch; max-width: 30rem; }
+  .weekstrip .d {
+    flex: 1; text-align: center; padding: .45rem 0;
+    font-family: "JetBrains Mono", monospace; font-size: .66rem; letter-spacing: .06em;
+    background: var(--st-open-bg); color: var(--st-open-fg);
+    border-top: 2px solid var(--st-open-bd); border-bottom: 2px solid var(--st-open-bd);
+  }
+  .weekstrip .d:first-child { border-left: 2px solid var(--st-open-bd); border-radius: 6px 0 0 6px; }
+  .weekstrip .d:last-child { border-right: 2px solid var(--st-open-bd); border-radius: 0 6px 6px 0; }
+  .weekstrip-cap { font-size: .85rem; color: var(--muted); margin: .5rem 0 0; font-style: italic; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.6rem; }
+  .chip {
+    font-family: "JetBrains Mono", monospace; font-size: .72rem;
+    padding: .3rem .65rem; border: 1px solid var(--line); border-radius: 999px;
+    background: var(--surface); color: var(--muted);
+  }
+
+  nav.toc { padding: 1.8rem 0; border-bottom: 1px solid var(--line); }
+  nav.toc ol {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .35rem 2rem;
+  }
+  nav.toc a {
+    display: flex; gap: .7rem; align-items: baseline;
+    color: var(--ink); text-decoration: none; padding: .28rem 0;
+    font-family: "Bricolage Grotesque", sans-serif; font-size: .93rem; font-weight: 600;
+  }
+  nav.toc a:hover, nav.toc a:focus-visible { color: var(--accent-ink); }
+  nav.toc .n { font-family: "JetBrains Mono", monospace; font-weight: 400; font-size: .74rem; color: var(--accent-ink); }
+
+  section { padding: 2.8rem 0 0; }
+  h2 {
+    font-size: 1.55rem; font-weight: 700; margin: 0 0 1.1rem;
+    display: flex; align-items: baseline; gap: .8rem;
+    padding-bottom: .55rem; border-bottom: 2px solid var(--line);
+  }
+  h2 .n { font-family: "JetBrains Mono", monospace; font-size: .85rem; font-weight: 400; color: var(--accent-ink); }
+  h3 { font-size: 1.08rem; font-weight: 700; margin: 1.7rem 0 .5rem; }
+  p { margin: .7rem 0; max-width: 70ch; }
+  ul, ol { max-width: 70ch; padding-left: 1.3rem; }
+  li { margin: .3rem 0; }
+  a { color: var(--accent-ink); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: .8rem; margin: 1.2rem 0; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: .95rem 1.1rem;
+  }
+  .card .k {
+    font-family: "JetBrains Mono", monospace; font-size: .68rem; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent-ink); margin: 0 0 .35rem;
+  }
+  .card .v { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: 1rem; margin: 0 0 .3rem; }
+  .card .w { font-size: .88rem; color: var(--muted); margin: 0; line-height: 1.5; }
+
+  .callout {
+    border-left: 3px solid var(--accent); background: var(--accent-soft);
+    border-radius: 0 10px 10px 0; padding: .9rem 1.1rem; margin: 1.3rem 0; max-width: 70ch;
+  }
+  .callout.warn { border-left-color: var(--warn-ink); background: var(--warn-soft); }
+  .callout p { margin: .3rem 0; }
+  .callout .t { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: .95rem; }
+
+  .tablewrap { overflow-x: auto; margin: 1.2rem 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+  th {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: .8rem;
+    text-align: left; padding: .6rem .9rem; background: var(--surface-2);
+    border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  td { padding: .55rem .9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td code, p code, li code {
+    font-family: "JetBrains Mono", monospace; font-size: .82em;
+    background: var(--surface-2); border: 1px solid var(--line);
+    padding: .06em .35em; border-radius: 4px; white-space: nowrap;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+
+  pre {
+    background: var(--code-bg); color: var(--code-ink);
+    font-family: "JetBrains Mono", Consolas, monospace; font-size: .8rem; line-height: 1.55;
+    padding: 1rem 1.2rem; border-radius: 10px; overflow-x: auto; margin: 1rem 0;
+  }
+  pre .c { color: #7A8FA3; }
+  pre .k { color: var(--code-hi); }
+
+  details { margin: 1rem 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  details summary {
+    cursor: pointer; padding: .7rem 1rem;
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 600; font-size: .92rem;
+  }
+  details[open] summary { border-bottom: 1px solid var(--line); }
+  details pre { margin: 0; border-radius: 0 0 10px 10px; }
+
+  /* ---------- maqueta del calendario ---------- */
+  .calwrap { overflow-x: auto; margin: 1.4rem 0; }
+  .cal {
+    min-width: 40rem; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 1rem 1rem 1.2rem;
+  }
+  .calbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+  .combo {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: .95rem;
+    border: 1px solid var(--line); border-radius: 8px; padding: .4rem .8rem; background: var(--surface-2);
+  }
+  .combo .car { color: var(--muted); font-size: .7rem; }
+  .monthnav { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: .95rem; color: var(--ink); display: flex; gap: .8rem; align-items: center; }
+  .monthnav .ar { color: var(--muted); }
+  .calhead { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: .35rem; }
+  .calhead div {
+    font-family: "JetBrains Mono", monospace; font-size: .66rem; letter-spacing: .08em;
+    text-align: center; color: var(--muted); padding: .25rem 0;
+  }
+  /* el viernes abre la semana reservable: se marca en la cabecera */
+  .calhead div:nth-child(6) { color: var(--accent-ink); font-weight: 600; }
+
+  /* Fila de calendario normal (domingo → sábado). Dentro van los SEGMENTOS
+     de cada semana reservable: 2 celdas (vie–sáb) + 5 celdas (dom–jue). */
+  .calrow { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: .45rem; }
+  .seg {
+    grid-column: span var(--n, 7);
+    display: grid;
+    grid-template-columns: repeat(var(--n, 7), 1fr);
+    position: relative;
+    border-radius: 9px;
+  }
+  /* lados abiertos = la semana continúa en la fila contigua */
+  .seg.l-open { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .seg.r-open { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .seg.r-open::after {
+    content: "›"; position: absolute; right: .3rem; top: .3rem;
+    font-family: "Bricolage Grotesque", sans-serif; font-size: .95rem;
+    line-height: 1; opacity: .5;
+  }
+  .seg .day {
+    padding: .8rem .5rem 1.7rem; text-align: left;
+    font-family: "Bricolage Grotesque", sans-serif; font-size: .82rem;
+    font-variant-numeric: tabular-nums; position: relative; min-height: 4.3rem;
+  }
+  .seg .day .dn { display: block; padding-left: .35rem; }
+  .seg .day.adj .dn { opacity: .45; }
+  .seg .tag {
+    position: absolute; right: .55rem; bottom: .4rem;
+    font-family: "JetBrains Mono", monospace; font-size: .62rem; letter-spacing: .06em;
+    padding: .14rem .5rem; border-radius: 999px; white-space: nowrap;
+  }
+  .seg.noslot { background: var(--st-noslot-bg); border: 1.5px solid var(--line); }
+  .seg.noslot .day, .seg.noslot::after { color: var(--st-noslot-fg); }
+  .seg.noslot .tag { color: var(--st-noslot-fg); border: 1px dashed var(--st-noslot-fg); }
+  .seg.open { background: var(--st-open-bg); border: 1.5px dashed var(--st-open-bd); }
+  .seg.open .day, .seg.open::after { color: var(--st-open-fg); }
+  .seg.open .tag { background: var(--st-open-bd); color: #fff; }
+  .seg.mine { background: var(--st-mine-bg); border: 1.5px solid var(--st-mine-bd); }
+  .seg.mine .day, .seg.mine::after { color: var(--st-mine-fg); }
+  .seg.mine .tag { background: var(--st-mine-bd); color: #fff; }
+  .seg.other { background: var(--st-other-bg); border: 1.5px solid var(--st-other-bd); }
+  .seg.other .day, .seg.other::after { color: var(--st-other-fg); }
+  .seg.other .tag { background: var(--st-other-bd); color: #fff; }
+  .seg.sched { background: var(--st-sched-bg); border: 1.5px solid var(--st-sched-bd); }
+  .seg.sched .day, .seg.sched::after { color: var(--st-sched-fg); }
+  .seg.sched .tag { background: var(--st-sched-bd); color: #fff; }
+  /* los dos segmentos de una misma semana se resaltan juntos */
+  .seg.hl { box-shadow: 0 0 0 2px var(--accent); z-index: 1; }
+  .day.ceded { background: var(--st-ceded-bg); box-shadow: inset 0 0 0 1.5px var(--st-ceded-bd); border-radius: 7px; }
+  .day.ceded .who {
+    display: inline-block; margin: .25rem 0 0 .35rem;
+    font-family: "JetBrains Mono", monospace; font-size: .6rem;
+    background: var(--st-ceded-bd); color: #fff; border-radius: 999px; padding: .05rem .4rem;
+  }
+  .day .mnt {
+    position: absolute; top: .3rem; right: .3rem; width: .55rem; height: .55rem;
+    border-radius: 50%; background: var(--st-maint-fg);
+  }
+  .lg .sw-sched { background: var(--st-sched-bg); border: 1px solid var(--st-sched-bd); }
+
+  /* ---------- línea de tiempo de la ventana rodante ---------- */
+  .tl { margin: 1.4rem 0; overflow-x: auto; }
+  .tl-inner { min-width: 34rem; }
+  .tl-track { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  .tl-m {
+    border: 1px solid var(--line); border-radius: 10px; padding: .75rem .85rem;
+    background: var(--surface);
+  }
+  .tl-m.on { background: var(--st-open-bg); border-color: var(--st-open-bd); }
+  .tl-m.off { background: var(--st-sched-bg); border-color: var(--st-sched-bd); }
+  .tl-m .mn {
+    font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; font-size: .95rem;
+    margin: 0 0 .25rem;
+  }
+  .tl-m.on .mn { color: var(--st-open-fg); }
+  .tl-m.off .mn { color: var(--st-sched-fg); }
+  .tl-m .ms {
+    font-family: "JetBrains Mono", monospace; font-size: .66rem; letter-spacing: .04em;
+    margin: 0; line-height: 1.55;
+  }
+  .tl-m.on .ms { color: var(--st-open-fg); }
+  .tl-m.off .ms { color: var(--st-sched-fg); }
+  .tl-now {
+    display: inline-flex; align-items: center; gap: .4rem; margin-bottom: .6rem;
+    font-family: "JetBrains Mono", monospace; font-size: .68rem; letter-spacing: .06em;
+    color: var(--accent-ink);
+  }
+  .tl-now::before {
+    content: ""; width: .5rem; height: .5rem; border-radius: 50%;
+    background: var(--accent); display: inline-block;
+  }
+
+  .legend { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .9rem; }
+  .lg {
+    display: inline-flex; align-items: center; gap: .4rem;
+    font-family: "JetBrains Mono", monospace; font-size: .66rem; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px; padding: .22rem .6rem; background: var(--surface);
+  }
+  .lg i { width: .7rem; height: .7rem; border-radius: 3px; display: inline-block; }
+  .lg .sw-noslot { background: var(--st-noslot-bg); border: 1px solid var(--st-noslot-fg); }
+  .lg .sw-open { background: var(--st-open-bg); border: 1px dashed var(--st-open-bd); }
+  .lg .sw-mine { background: var(--st-mine-bg); border: 1px solid var(--st-mine-bd); }
+  .lg .sw-other { background: var(--st-other-bg); border: 1px solid var(--st-other-bd); }
+  .lg .sw-ceded { background: var(--st-ceded-bg); border: 1px solid var(--st-ceded-bd); }
+  .lg .sw-maint { background: var(--st-maint-fg); border-radius: 50%; }
+
+  .qa { counter-reset: q; list-style: none; padding: 0; max-width: 72ch; }
+  .qa li {
+    counter-increment: q; position: relative; padding: .85rem 1rem .85rem 3rem;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin: .6rem 0;
+  }
+  .qa li::before {
+    content: counter(q, decimal-leading-zero);
+    position: absolute; left: 1rem; top: .95rem;
+    font-family: "JetBrains Mono", monospace; font-size: .78rem; color: var(--accent-ink);
+  }
+  .qa .qt { font-family: "Bricolage Grotesque", sans-serif; font-weight: 700; display: block; margin-bottom: .2rem; }
+  .qa .qr { font-size: .9rem; color: var(--muted); }
+
+  footer { margin-top: 4rem; padding-top: 1.4rem; border-top: 1px solid var(--line); font-size: .85rem; color: var(--muted); }
+  @media (prefers-reduced-motion: no-preference) {
+    nav.toc a, .seg { transition: color .15s ease, box-shadow .15s ease; }
+  }
+</style>
+
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Documento de diseño · 24 de agosto de 2026</p>
+  <h1>Wellbros</h1>
+  <p class="lede">Plataforma web y móvil para administrar la ocupación de propiedades compartidas: un <strong>calendario en vivo</strong> con retícula normal de domingo a sábado y semanas reservables de <strong>viernes a jueves</strong>, con apertura por turnos de 15 días, cesión de días entre usuarios, notas de mantenimiento, bitácora oculta y avisos por correo — con la integración de WhatsApp dejada lista para activarse.</p>
+  <div class="weekstrip" role="img" aria-label="Una semana reservable: viernes, sábado, domingo, lunes, martes, miércoles y jueves">
+    <div class="d">VIE</div><div class="d">SÁB</div><div class="d">DOM</div><div class="d">LUN</div><div class="d">MAR</div><div class="d">MIÉ</div><div class="d">JUE</div>
+  </div>
+  <p class="weekstrip-cap">La unidad atómica de reserva: viernes 00:00 → jueves 23:59.</p>
+  <div class="chips">
+    <span class="chip">Next.js 15 · TypeScript</span>
+    <span class="chip">PostgreSQL · Prisma</span>
+    <span class="chip">PWA instalable</span>
+    <span class="chip">Debian 13</span>
+    <span class="chip">Temas claro / oscuro</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Contenido">
+  <ol>
+    <li><a href="#s1"><span class="n">01</span> Decisiones confirmadas</a></li>
+    <li><a href="#s2"><span class="n">02</span> Alcance y trazabilidad</a></li>
+    <li><a href="#s3"><span class="n">03</span> Stack tecnológico</a></li>
+    <li><a href="#s4"><span class="n">04</span> El calendario</a></li>
+    <li><a href="#s5"><span class="n">05</span> Modelo de datos</a></li>
+    <li><a href="#s6"><span class="n">06</span> Reglas de negocio</a></li>
+    <li><a href="#s7"><span class="n">07</span> Ventana de apertura</a></li>
+    <li><a href="#s8"><span class="n">08</span> Notificaciones</a></li>
+    <li><a href="#s9"><span class="n">09</span> Seguridad y bitácora</a></li>
+    <li><a href="#s10"><span class="n">10</span> Despliegue en Debian 13</a></li>
+    <li><a href="#s11"><span class="n">11</span> Plan de construcción</a></li>
+    <li><a href="#s12"><span class="n">12</span> Preguntas abiertas</a></li>
+    <li><a href="#s13"><span class="n">13</span> Contemplado a futuro</a></li>
+  </ol>
+</nav>
+
+<section id="s1">
+  <h2><span class="n">01</span> Decisiones confirmadas</h2>
+  <p>Nueve decisiones de producto ya quedaron cerradas con el cliente. Todo el diseño posterior las da por definitivas.</p>
+  <div class="cards">
+    <div class="card"><p class="k">Móvil</p><p class="v">PWA responsive</p><p class="w">Una sola aplicación web instalable desde el navegador. Mismo código para web y teléfono; sin tiendas de aplicaciones.</p></div>
+    <div class="card"><p class="k">Stack</p><p class="v">Next.js todo-en-uno</p><p class="w">Frontend y API en un solo proyecto; un solo despliegue en el servidor Debian.</p></div>
+    <div class="card"><p class="k">Correo</p><p class="v">Resend</p><p class="w">Cuenta ya contratada. Envío desde un dominio propio verificado, con Reply-To al buzón de administración. Requiere cuatro registros DNS (§08).</p></div>
+    <div class="card"><p class="k">Reservas</p><p class="v">Confirmación inmediata</p><p class="w">Elegir una semana abierta la confirma al instante. Ivonne ya controla la oferta al decidir qué semanas abre.</p></div>
+    <div class="card"><p class="k">Cesión de días</p><p class="v">Automática con aviso</p><p class="w">El dueño de la semana elige días y destinatario; queda hecha al momento y se notifica. Puede revocarse antes de la fecha.</p></div>
+    <div class="card"><p class="k">Límites</p><p class="v">Sin límite de semanas</p><p class="w">Cualquier usuario puede reservar tantas semanas abiertas como desee.</p></div>
+    <div class="card"><p class="k">Mantenimiento</p><p class="v">Visible e informativo</p><p class="w">Todos ven las notas en el calendario; no impiden reservar. La disponibilidad se controla con los slots.</p></div>
+    <div class="card"><p class="k">Ventana de apertura</p><p class="v">15 días exactos</p><p class="w">El mes siguiente se habilita 15 días antes de su día 1. La semana cuenta en el mes de su viernes de inicio; Ivonne queda exenta (§07).</p></div>
+    <div class="card"><p class="k">Bitácora</p><p class="v">Todos los eventos</p><p class="w">Se registra todo lo relevante (reservas, cesiones, slots, usuarios, accesos), no solo las cancelaciones de Ivonne. Solo ella la consulta.</p></div>
+  </div>
+</section>
+
+<section id="s2">
+  <h2><span class="n">02</span> Alcance y trazabilidad</h2>
+  <p>Dos roles: la <strong>superusuaria</strong> (Ivonne Buenfil) administra usuarios, propiedades, slots, notas de mantenimiento y bitácora, además de operar como cualquier usuaria. Los <strong>usuarios</strong> ven todas las propiedades, reservan semanas abiertas, cancelan sus propias reservas y ceden días de sus semanas. No existe registro público: todas las cuentas las crea Ivonne.</p>
+  <p>Cada requerimiento original queda resuelto así:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Requerimiento</th><th>Dónde queda resuelto</th></tr></thead>
+    <tbody>
+      <tr><td>Aplicación web y móvil</td><td>PWA instalable con diseño responsive (§03, §04)</td></tr>
+      <tr><td>Calendario en vivo</td><td>Actualización por SSE con respaldo de polling (§04)</td></tr>
+      <tr><td>Solo la superusuaria crea usuarios</td><td>Módulo Configuración → Usuarios, restringido por rol (§02, §09)</td></tr>
+      <tr><td>Todos acceden a todas las propiedades</td><td>Sin permisos por propiedad; el rol solo distingue administración (§02)</td></tr>
+      <tr><td>Slots de fechas a discreción de la superusuaria</td><td>Tabla <code>week_slots</code> + gestor de semanas con apertura en lote (§04, §05)</td></tr>
+      <tr><td>Sin slots abiertos no hay reservas</td><td>Máquina de estados del slot; solo <code>OPEN</code> es reservable (§06)</td></tr>
+      <tr><td>Texto libre para el combo de propiedades</td><td>Campo <code>properties.name</code>, mostrado en el selector sobre el calendario (§04, §05)</td></tr>
+      <tr><td>Semanas completas viernes 00:00 → jueves 23:59</td><td>Restricción en base de datos (el inicio debe ser viernes); en el calendario, banda de dos tramos sobre la retícula domingo–sábado (§04, §05)</td></tr>
+      <tr><td>Ceder o regalar días de la semana propia</td><td>Tabla <code>day_grants</code> con validación de rango y flujo de cesión en la interfaz (§05, §06)</td></tr>
+      <tr><td>Solo el creador o la superusuaria cancelan; si cancela ella, queda en bitácora oculta</td><td>Autorización por rol + <code>audit_log</code> de solo-escritura (§06, §09)</td></tr>
+      <tr><td><strong>Ventana de 15 días para el mes siguiente</strong></td><td>Estado derivado que se combina con el slot, validado en tres capas (§07)</td></tr>
+      <tr><td>Correo a todos los usuarios al reservar</td><td>Cola transaccional (outbox) con difusión a todos los activos (§08)</td></tr>
+      <tr><td>WhatsApp preparado pero inactivo</td><td>Canal deshabilitado con configuración y campos ya previstos (§08)</td></tr>
+      <tr><td>Temas dark y white a elección del usuario</td><td>Preferencia por usuario guardada en servidor, sin parpadeo al cargar (§04)</td></tr>
+      <tr><td>PostgreSQL y servidor Debian 13</td><td>Base del stack y plan de despliegue completo (§03, §10)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s3">
+  <h2><span class="n">03</span> Stack tecnológico</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Capa</th><th>Elección</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr><td>Framework</td><td>Next.js 15 (App Router) + TypeScript</td><td>Frontend y API en un solo proyecto; un solo servicio que desplegar. La API se concentra en <code>/api/v1/*</code> para que una futura app nativa la consuma sin cambios.</td></tr>
+      <tr><td>Interfaz</td><td>Tailwind CSS + shadcn/ui</td><td>Componentes accesibles (modales, selects, sheets) y theming claro/oscuro por clase.</td></tr>
+      <tr><td>Calendario</td><td>Componente propio con date-fns</td><td>La semana viernes→jueves como unidad de reserva es atípica; ninguna librería la modela de forma nativa (§04).</td></tr>
+      <tr><td>Datos</td><td>PostgreSQL + Prisma</td><td>Postgres ya está disponible. Las reglas críticas viven en la base (constraints, índices parciales, trigger), no solo en la aplicación.</td></tr>
+      <tr><td>Autenticación</td><td>Auth.js (credenciales) con sesiones en BD</td><td>Login con email y contraseña; roles <code>SUPERUSER</code>/<code>USER</code>; sin registro público.</td></tr>
+      <tr><td>Correo</td><td>Resend (SDK oficial) sobre cola transaccional</td><td>Devuelve el identificador del mensaje al instante para correlacionar entregas y rebotes, da errores distinguibles entre permanentes y transitorios, y soporta idempotencia y envío por lotes (§08).</td></tr>
+      <tr><td>En vivo</td><td>Server-Sent Events + revalidación</td><td>Latencia inmediata con la simplicidad de HTTP; reconexión automática del navegador (§04).</td></tr>
+      <tr><td>PWA</td><td>Serwist (service worker) + manifest</td><td>Instalable en Android e iOS; datos del calendario siempre network-first (§10).</td></tr>
+      <tr><td>Servidor</td><td>Debian 13 · Node 22 LTS · systemd · Nginx · Let's Encrypt</td><td>Sin Docker: una sola app y una base ya provisionada no lo ameritan (§10).</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s4">
+  <h2><span class="n">04</span> El calendario</h2>
+  <p>Es la pantalla principal tras el login y el corazón del producto. El mes se presenta como <strong>un calendario normal, de domingo a sábado</strong>, para que cualquiera lo lea sin aprender nada nuevo. Sobre esa retícula se dibuja la unidad de negocio: la semana reservable de viernes a jueves, que ocupa los <strong>dos últimos días de una fila y los cinco primeros de la siguiente</strong>.</p>
+  <p>Cada semana se pinta entonces como una <strong>banda continua partida en dos tramos</strong> del mismo color, con las esquinas rectas del lado del corte y una marca «›» que indica que sigue abajo — la misma convención que usan Google Calendar y Outlook para un evento que cruza el fin de semana. Los dos tramos son una sola cosa: al pasar el cursor por cualquiera de ellos se resaltan ambos, y un clic en cualquiera abre la misma reserva.</p>
+
+  <div class="calwrap">
+  <div class="cal" role="img" aria-label="Calendario de septiembre de 2026 en retícula domingo a sábado. Cada semana reservable de viernes a jueves aparece como una banda de dos tramos: la semana del 11 al 17 es del usuario, con los días 12 y 13 cedidos a MG; las semanas del 18 al 24 y del 25 al 1 de octubre están disponibles; la del 4 al 10 está reservada por Ivonne B. y tiene una nota de mantenimiento el día 8.">
+    <div class="calbar">
+      <span class="combo">Casa del Lago <span class="car">▾</span></span>
+      <span class="monthnav"><span class="ar">◀</span> Septiembre 2026 <span class="ar">▶</span></span>
+    </div>
+    <div class="calhead"><div>DOM</div><div>LUN</div><div>MAR</div><div>MIÉ</div><div>JUE</div><div>VIE</div><div>SÁB</div></div>
+
+    <div class="calrow">
+      <div class="seg noslot l-open" style="--n:5" data-w="w1">
+        <span class="tag">Sin apertura</span>
+        <div class="day adj"><span class="dn">30</span></div><div class="day adj"><span class="dn">31</span></div><div class="day"><span class="dn">1</span></div><div class="day"><span class="dn">2</span></div><div class="day"><span class="dn">3</span></div>
+      </div>
+      <div class="seg other r-open" style="--n:2" data-w="w2">
+        <div class="day"><span class="dn">4</span></div><div class="day"><span class="dn">5</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg other l-open" style="--n:5" data-w="w2">
+        <span class="tag">Ivonne B.</span>
+        <div class="day"><span class="dn">6</span></div><div class="day"><span class="dn">7</span></div><div class="day"><span class="dn">8</span><span class="mnt" title="Servicio de aire acondicionado"></span></div><div class="day"><span class="dn">9</span></div><div class="day"><span class="dn">10</span></div>
+      </div>
+      <div class="seg mine r-open" style="--n:2" data-w="w3">
+        <div class="day"><span class="dn">11</span></div><div class="day ceded"><span class="dn">12</span><span class="who">MG</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg mine l-open" style="--n:5" data-w="w3">
+        <span class="tag">Tu reserva</span>
+        <div class="day ceded"><span class="dn">13</span><span class="who">MG</span></div><div class="day"><span class="dn">14</span></div><div class="day"><span class="dn">15</span></div><div class="day"><span class="dn">16</span></div><div class="day"><span class="dn">17</span></div>
+      </div>
+      <div class="seg open r-open" style="--n:2" data-w="w4">
+        <div class="day"><span class="dn">18</span></div><div class="day"><span class="dn">19</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg open l-open" style="--n:5" data-w="w4">
+        <span class="tag">Disponible</span>
+        <div class="day"><span class="dn">20</span></div><div class="day"><span class="dn">21</span></div><div class="day"><span class="dn">22</span></div><div class="day"><span class="dn">23</span></div><div class="day"><span class="dn">24</span></div>
+      </div>
+      <div class="seg open r-open" style="--n:2" data-w="w5">
+        <div class="day"><span class="dn">25</span></div><div class="day"><span class="dn">26</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg open l-open" style="--n:5" data-w="w5">
+        <span class="tag">Disponible</span>
+        <div class="day"><span class="dn">27</span></div><div class="day"><span class="dn">28</span></div><div class="day"><span class="dn">29</span></div><div class="day"><span class="dn">30</span></div><div class="day adj"><span class="dn">1</span></div>
+      </div>
+      <div class="seg noslot r-open" style="--n:2" data-w="w6">
+        <div class="day adj"><span class="dn">2</span></div><div class="day adj"><span class="dn">3</span></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="lg"><i class="sw-noslot"></i> Sin apertura</span>
+      <span class="lg"><i class="sw-open"></i> Disponible</span>
+      <span class="lg"><i class="sw-mine"></i> Tu reserva</span>
+      <span class="lg"><i class="sw-other"></i> Reservada</span>
+      <span class="lg"><i class="sw-ceded"></i> Día cedido</span>
+      <span class="lg"><i class="sw-maint"></i> Mantenimiento</span>
+    </div>
+  </div>
+  </div>
+  <p class="weekstrip-cap">Pasa el cursor sobre cualquier tramo para ver la semana completa que forma. La reserva del usuario va del viernes 11 al jueves 17; los días 12 y 13, cedidos a MG, quedan a un lado y otro del corte de fila.</p>
+
+  <h3>Estados e interacciones</h3>
+  <ul>
+    <li><strong>Combo de propiedades</strong> fijo sobre el calendario (con el texto libre de cada propiedad); la selección se conserva entre sesiones y en la URL para compartir enlaces.</li>
+    <li><strong>Un clic en cualquiera de los dos tramos</strong> actúa sobre la semana entera: no hay que acertarle al viernes. La etiqueta de estado se coloca en el tramo largo (domingo–jueves), donde hay espacio para leerla.</li>
+    <li><strong>Semana disponible</strong> → clic abre el modal de confirmación con el rango exacto («Viernes 18 sep 00:00 → Jueves 24 sep 23:59») y el aviso de que se notificará a todos. Confirmación optimista: si otro usuario ganó la semana un instante antes, la interfaz lo explica y refresca.</li>
+    <li><strong>Reserva propia</strong> → panel lateral con dos acciones: <em>cancelar</em> (con confirmación) y <em>ceder días</em> (chips de los 7 días con multiselección, combo de usuario destino y resumen «Cedes sáb 12 y dom 13 a Marta»). Los días ya cedidos permiten revocar.</li>
+    <li><strong>Reserva de otro</strong> → solo lectura con el nombre visible. La superusuaria ve además «Cancelar (se registrará en bitácora)» con campo de motivo.</li>
+    <li><strong>Superusuaria</strong> → abre y cierra semanas desde el propio calendario (además del gestor en Configuración) y agrega notas de mantenimiento en cualquier fecha.</li>
+    <li>El color nunca es el único portador de significado: cada estado combina color, etiqueta e icono, con contraste AA en ambos temas.</li>
+    <li><strong>Teclado y lectores de pantalla</strong>: la retícula se recorre celda por celda como un calendario estándar, y cada día anuncia a qué semana pertenece además de su estado — «domingo 13 de septiembre, semana del 11 al 17, tu reserva, día cedido a MG». Así la partición en dos tramos, que es puramente visual, no confunde a quien no la ve.</li>
+  </ul>
+
+  <h3>En vivo</h3>
+  <p>Un endpoint SSE emite eventos ligeros («algo cambió en la propiedad X») y el cliente revalida la vista del mes; las acciones del usuario viajan por peticiones normales. SSE da la latencia de un WebSocket con la operación de HTTP simple: reconexión automática del navegador y configuración trivial en Nginx. Respaldo: polling cada 30 s y revalidación al recuperar foco o conexión — importante en móvil.</p>
+
+  <h3>Móvil y temas</h3>
+  <p>En pantallas angostas <strong>desaparece la partición</strong>: cada semana reservable se convierte en una <strong>tarjeta vertical completa</strong> («Vie 18 – Jue 24 sep · Disponible») con su tira de 7 días adentro para cesiones y mantenimiento. Es la vista más clara de las dos, porque ahí la semana vuelve a ser una sola pieza, con objetivo táctil amplio y la acción principal a un toque. El tema claro/oscuro se elige en Perfil, se guarda por usuario en el servidor y se aplica sin parpadeo al cargar.</p>
+
+  <h3>Páginas</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Ruta</th><th>Acceso</th><th>Contenido</th></tr></thead>
+    <tbody>
+      <tr><td><code>/login</code></td><td>Público</td><td>Email y contraseña; sin registro público.</td></tr>
+      <tr><td><code>/</code></td><td>Autenticado</td><td>Calendario: combo de propiedad, mes, leyenda y acciones según rol.</td></tr>
+      <tr><td><code>/config/usuarios</code></td><td>Superusuaria</td><td>Alta, edición y desactivación de usuarios; teléfono opcional (preparado para WhatsApp).</td></tr>
+      <tr><td><code>/config/propiedades</code></td><td>Superusuaria</td><td>Lista simple de propiedades + gestor de semanas para abrir/cerrar slots en lote y notas de mantenimiento.</td></tr>
+      <tr><td><code>/bitacora</code></td><td>Superusuaria</td><td>Registro auditable con filtros por propiedad y fechas. Invisible (ruta y menú) para usuarios normales, protegido en la API.</td></tr>
+      <tr><td><code>/perfil</code></td><td>Autenticado</td><td>Nombre, cambio de contraseña, selector de tema Claro / Oscuro / Sistema.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s5">
+  <h2><span class="n">05</span> Modelo de datos</h2>
+  <p>Principios: las semanas se guardan como <strong>fechas de calendario</strong> (el viernes de inicio, tipo <code>date</code>) y no como timestamps — inmune a husos horarios y horario de verano. <strong>Nada se borra físicamente</strong>: usuarios y propiedades se desactivan; reservas y cesiones cambian de estado. Y las invariantes críticas viven en PostgreSQL, no solo en la aplicación.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Tabla</th><th>Propósito</th><th>Clave del diseño</th></tr></thead>
+    <tbody>
+      <tr><td><code>users</code></td><td>Cuentas y preferencias</td><td>Rol <code>SUPERUSER</code>/<code>USER</code>, tema, teléfono E.164 opcional listo para WhatsApp.</td></tr>
+      <tr><td><code>properties</code></td><td>Propiedades</td><td><code>name</code> de texto libre: es lo que muestra el combo del calendario.</td></tr>
+      <tr><td><code>week_slots</code></td><td>Semanas que Ivonne abre</td><td><code>CHECK</code>: el inicio debe ser viernes; único por propiedad+fecha → los solapes son imposibles por construcción. Estados <code>OPEN / RESERVED / CLOSED</code>. Columna calculada <code>anchor_month</code> para resolver la ventana con un solo valor indexado.</td></tr>
+      <tr><td><code>reservations</code></td><td>Reservas</td><td>Índice único parcial: un slot solo admite <em>una</em> reserva activa, conservando el historial de canceladas. Guarda con qué política se creó y si usó la exención de ventana, con su motivo.</td></tr>
+      <tr><td><code>day_grants</code></td><td>Cesiones de días</td><td>Trigger valida: fecha dentro de la semana, reserva activa, cedente = dueño; un día no puede cederse dos veces.</td></tr>
+      <tr><td><code>maintenance_notes</code></td><td>Notas de mantenimiento</td><td>Rango de fechas + texto; visibles para todos, no bloquean.</td></tr>
+      <tr><td><code>audit_log</code></td><td>Bitácora oculta</td><td>Solo-escritura (sin UPDATE/DELETE para la app); actor, acción, entidad y snapshot JSONB.</td></tr>
+      <tr><td><code>booking_policy</code></td><td>Parámetros de la ventana</td><td>Versionada por fecha de vigencia: días de anticipación, anclaje de la semana, horizonte visible y exención del superusuario. Cambiarla es configuración, nunca código (§07).</td></tr>
+      <tr><td><code>notification_channels</code></td><td>Canales de aviso</td><td><code>EMAIL</code> activo; <code>WHATSAPP</code> presente pero deshabilitado.</td></tr>
+      <tr><td><code>notification_outbox</code></td><td>Cola de envío</td><td>Los avisos se encolan en la misma transacción que la reserva; un worker los envía con reintentos. Admite envío programado, necesario para anunciar un mes justo al abrirse.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Estados del slot</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Transición</th><th>Quién</th><th>Efecto</th></tr></thead>
+    <tbody>
+      <tr><td><code>OPEN → RESERVED</code></td><td>Usuario reserva</td><td>Reserva creada + correos encolados, todo en una transacción.</td></tr>
+      <tr><td><code>RESERVED → OPEN</code></td><td>Dueño o superusuaria cancela</td><td>Cesiones caen en cascada; la semana vuelve a estar disponible.</td></tr>
+      <tr><td><code>OPEN ↔ CLOSED</code></td><td>Superusuaria</td><td>Abre o retira semanas de la oferta.</td></tr>
+      <tr><td><code>RESERVED → CLOSED</code></td><td>Superusuaria (cierre forzado)</td><td>Cancela la reserva con confirmación explícita + bitácora + avisos a afectados.</td></tr>
+    </tbody>
+  </table></div>
+
+  <details>
+    <summary>Ver DDL completo propuesto (PostgreSQL)</summary>
+<pre>CREATE EXTENSION IF NOT EXISTS citext;
+
+CREATE TYPE user_role          AS ENUM ('SUPERUSER', 'USER');
+CREATE TYPE slot_status        AS ENUM ('OPEN', 'RESERVED', 'CLOSED');
+CREATE TYPE reservation_status AS ENUM ('ACTIVE', 'CANCELLED');
+CREATE TYPE grant_status       AS ENUM ('ACTIVE', 'REVOKED', 'CANCELLED');
+CREATE TYPE notif_channel      AS ENUM ('EMAIL', 'WHATSAPP');
+
+<span class="c">-- usuarios ----------------------------------------------------------</span>
+CREATE TABLE users (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email         citext NOT NULL UNIQUE,
+  password_hash text   NOT NULL,
+  full_name     text   NOT NULL,
+  phone         varchar(20),               <span class="c">-- E.164, preparado para WhatsApp</span>
+  role          user_role NOT NULL DEFAULT 'USER',
+  theme         varchar(10) NOT NULL DEFAULT 'system',
+  is_active     boolean NOT NULL DEFAULT true,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now()
+);
+
+<span class="c">-- propiedades -------------------------------------------------------</span>
+CREATE TABLE properties (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name       text NOT NULL UNIQUE,         <span class="c">-- texto libre: combo del calendario</span>
+  is_active  boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+<span class="c">-- slots de semana ---------------------------------------------------</span>
+CREATE TABLE week_slots (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid NOT NULL REFERENCES properties(id),
+  start_date  date NOT NULL,                                    <span class="c">-- viernes</span>
+  end_date    date GENERATED ALWAYS AS (start_date + 6) STORED, <span class="c">-- jueves</span>
+  status      slot_status NOT NULL DEFAULT 'OPEN',
+  created_by  uuid NOT NULL REFERENCES users(id),
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT week_slots_friday_chk CHECK (EXTRACT(ISODOW FROM start_date) = 5),
+  CONSTRAINT week_slots_prop_start_uniq UNIQUE (property_id, start_date)
+);
+
+<span class="c">-- reservas ----------------------------------------------------------</span>
+CREATE TABLE reservations (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  slot_id       uuid NOT NULL REFERENCES week_slots(id),
+  user_id       uuid NOT NULL REFERENCES users(id),
+  status        reservation_status NOT NULL DEFAULT 'ACTIVE',
+  cancelled_at  timestamptz,
+  cancelled_by  uuid REFERENCES users(id),
+  cancel_reason text,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT reservations_cancel_chk
+    CHECK (status = 'ACTIVE' OR (cancelled_at IS NOT NULL AND cancelled_by IS NOT NULL))
+);
+<span class="c">-- 1:1 efectivo con el slot, conservando historial de canceladas:</span>
+CREATE UNIQUE INDEX reservations_slot_active_uniq
+  ON reservations (slot_id) WHERE status = 'ACTIVE';
+
+<span class="c">-- cesiones de días --------------------------------------------------</span>
+CREATE TABLE day_grants (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  reservation_id  uuid NOT NULL REFERENCES reservations(id),
+  grantor_user_id uuid NOT NULL REFERENCES users(id),
+  grantee_user_id uuid NOT NULL REFERENCES users(id),
+  grant_date      date NOT NULL,
+  status          grant_status NOT NULL DEFAULT 'ACTIVE',
+  ended_at        timestamptz,
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT day_grants_not_self_chk CHECK (grantee_user_id &lt;&gt; grantor_user_id)
+);
+CREATE UNIQUE INDEX day_grants_res_date_active_uniq
+  ON day_grants (reservation_id, grant_date) WHERE status = 'ACTIVE';
+
+<span class="c">-- validación cruzada: fecha dentro de la semana, reserva activa, cedente = dueño</span>
+CREATE FUNCTION trg_day_grant_validate() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE r record;
+BEGIN
+  SELECT ws.start_date, ws.end_date, res.status AS res_status, res.user_id
+    INTO r
+    FROM reservations res
+    JOIN week_slots ws ON ws.id = res.slot_id
+   WHERE res.id = NEW.reservation_id
+   FOR UPDATE OF res;
+  IF r.res_status &lt;&gt; 'ACTIVE' THEN
+    RAISE EXCEPTION 'La reserva no está activa';
+  END IF;
+  IF NEW.grant_date &lt; r.start_date OR NEW.grant_date &gt; r.end_date THEN
+    RAISE EXCEPTION 'La fecha cedida está fuera de la semana de la reserva';
+  END IF;
+  IF NEW.grantor_user_id &lt;&gt; r.user_id THEN
+    RAISE EXCEPTION 'Solo el dueño de la reserva puede ceder días';
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE TRIGGER day_grants_validate BEFORE INSERT ON day_grants
+  FOR EACH ROW EXECUTE FUNCTION trg_day_grant_validate();
+
+<span class="c">-- notas de mantenimiento -------------------------------------------</span>
+CREATE TABLE maintenance_notes (
+  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  property_id uuid NOT NULL REFERENCES properties(id),
+  start_date  date NOT NULL,
+  end_date    date NOT NULL,
+  note        text NOT NULL,
+  created_by  uuid NOT NULL REFERENCES users(id),
+  created_at  timestamptz NOT NULL DEFAULT now(),
+  updated_at  timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT maintenance_range_chk CHECK (end_date &gt;= start_date)
+);
+
+<span class="c">-- bitácora oculta (solo-escritura para la app) ----------------------</span>
+CREATE TABLE audit_log (
+  id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  actor_user_id uuid NOT NULL REFERENCES users(id),
+  action        text NOT NULL,
+  entity_type   text NOT NULL,
+  entity_id     uuid NOT NULL,
+  details       jsonb NOT NULL DEFAULT '{}'::jsonb,
+  created_at    timestamptz NOT NULL DEFAULT now()
+);
+
+<span class="c">-- canales de notificación ------------------------------------------</span>
+CREATE TABLE notification_channels (
+  channel    notif_channel PRIMARY KEY,
+  is_enabled boolean NOT NULL,
+  config     jsonb NOT NULL DEFAULT '{}'::jsonb,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+<span class="c">-- outbox transaccional ---------------------------------------------</span>
+CREATE TABLE notification_outbox (
+  id                bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  channel           notif_channel NOT NULL,
+  recipient_user_id uuid NOT NULL REFERENCES users(id),
+  recipient_address text NOT NULL,
+  event_type        text NOT NULL,
+  payload           jsonb NOT NULL,
+  dedupe_key        text NOT NULL UNIQUE,
+  status            text NOT NULL DEFAULT 'PENDING',
+  attempts          int  NOT NULL DEFAULT 0,
+  next_attempt_at   timestamptz NOT NULL DEFAULT now(),
+  last_error        text,
+  sent_at           timestamptz,
+  created_at        timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX ON notification_outbox (status, next_attempt_at);</pre>
+  </details>
+</section>
+
+<section id="s6">
+  <h2><span class="n">06</span> Reglas de negocio</h2>
+
+  <h3>Reservar sin dobles reservas</h3>
+  <p>Dos usuarios pueden pulsar «Reservar» sobre la misma semana al mismo tiempo. La transacción bloquea el slot, verifica que siga abierto, crea la reserva, lo marca reservado y <strong>encola los correos en la misma transacción</strong> — o se confirma todo, o nada:</p>
+<pre>BEGIN;
+  SELECT status FROM week_slots WHERE id = $slot FOR UPDATE;  <span class="c">-- serializa competidores</span>
+  <span class="c">-- si status &lt;&gt; 'OPEN' → error de negocio: «esta semana ya fue reservada»</span>
+  INSERT INTO reservations (slot_id, user_id) VALUES ($slot, $user);
+  UPDATE week_slots SET status = 'RESERVED' WHERE id = $slot;
+  INSERT INTO notification_outbox (...)      <span class="c">-- un aviso por cada usuario activo</span>
+    SELECT 'EMAIL', u.id, u.email, 'RESERVATION_CREATED', $payload
+      FROM users u WHERE u.is_active;
+COMMIT;</pre>
+  <p>Si aun así dos escrituras llegaran a la vez, el índice único parcial de <code>reservations</code> rechaza la segunda: <strong>la base de datos es la última línea de defensa</strong>, nunca solo la validación de la interfaz.</p>
+
+  <h3>Cancelar</h3>
+  <p>Solo el dueño de la reserva o la superusuaria pueden cancelar. En una transacción: la reserva pasa a <code>CANCELLED</code> (con quién, cuándo y motivo), <strong>todas sus cesiones activas caen en cascada</strong> (una cesión nunca sobrevive a su reserva), la semana vuelve a quedar disponible, y se avisa a los afectados. Si canceló la superusuaria, se escribe además la entrada de bitácora con el snapshot completo: dueño afectado, propiedad, semana, cesiones arrastradas y motivo.</p>
+
+  <h3>Casos borde ya resueltos en el diseño</h3>
+  <ul>
+    <li><strong>Cierre forzado de una semana reservada</strong>: permitido solo a la superusuaria con confirmación explícita («esta semana tiene una reserva de X; cerrarla la cancelará»); cancela con cascada, cierra el slot, escribe bitácora y notifica.</li>
+    <li><strong>Ceder mientras se cancela</strong>: el trigger de cesiones bloquea la reserva, así que una cesión concurrente con una cancelación ve el estado final y falla limpiamente.</li>
+    <li><strong>Usuario desactivado con reservas futuras</strong>: la desactivación no cancela nada en silencio; la interfaz se lo advierte a Ivonne y le ofrece cancelarlas una a una (cada una con su cascada y bitácora). Un usuario inactivo no puede entrar ni recibe avisos.</li>
+    <li><strong>Propiedad desactivada</strong>: igual — advertencia, cancelación asistida, slots restantes cerrados; desaparece del combo pero conserva su historial.</li>
+    <li><strong>Fechas pasadas</strong>: los usuarios no pueden reservar semanas cuyo viernes ya pasó; la superusuaria sí, para registrar ocupación histórica.</li>
+    <li><strong>Fallo del correo</strong>: el aviso queda pendiente en la cola y se reintenta con espera creciente (1 min → 8 h, 5 intentos); la reserva jamás se pierde por un problema de correo, e Ivonne ve los no entregados con botón de reintento.</li>
+    <li><strong>WhatsApp activado a futuro con usuarios sin teléfono</strong>: solo se encola para quienes tengan número válido; el resto se le lista a Ivonne para completar el dato.</li>
+  </ul>
+</section>
+
+<section id="s7">
+  <h2><span class="n">07</span> Ventana de apertura</h2>
+  <p>Regla nueva, independiente de los slots: <strong>abrir una semana no la vuelve reservable de inmediato</strong>. Las semanas del mes corriente siempre se pueden tomar; las del mes siguiente se habilitan <strong>exactamente 15 días antes del día 1 de ese mes</strong>. Es un reparto por turnos: nadie puede acaparar el calendario con meses de anticipación.</p>
+
+  <div class="callout">
+    <p class="t">Una sola regla, no dos</p>
+    <p>«El mes corriente siempre está disponible» no hace falta programarlo: es una <em>consecuencia</em> de la regla de los 15 días. La apertura de cualquier mes siempre cae dentro del mes anterior, así que al llegar su día 1 ya lleva medio mes abierto. Se implementa y se prueba <strong>un solo predicado</strong>.</p>
+  </div>
+
+  <h3>Cómo se ve el 24 de agosto de 2026</h3>
+  <div class="tl">
+    <div class="tl-inner">
+      <p class="tl-now">Hoy · lunes 24 de agosto de 2026</p>
+      <div class="tl-track">
+        <div class="tl-m on">
+          <p class="mn">Agosto 2026</p>
+          <p class="ms">MES CORRIENTE<br>Abrió el 17 jul<br><strong>Reservable</strong></p>
+        </div>
+        <div class="tl-m on">
+          <p class="mn">Septiembre 2026</p>
+          <p class="ms">MES SIGUIENTE<br>Abrió el 17 ago<br><strong>Reservable</strong></p>
+        </div>
+        <div class="tl-m off">
+          <p class="mn">Octubre 2026</p>
+          <p class="ms">FUERA DE VENTANA<br>Abre el 16 sep<br><strong>Programada</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p>Octubre y todo lo posterior se muestra <strong>visible pero bloqueado, con su fecha de apertura</strong> — decisión confirmada. El usuario puede navegar hasta 6 meses adelante, ver qué semanas abrió Ivonne y saber exactamente cuándo pelearlas. Ocultarlas generaría la sospecha de que alguien ya las tiene.</p>
+
+  <h3>El día de apertura se mueve cada mes</h3>
+  <p>Al ser un cálculo exacto de 15 días (decisión confirmada frente a un día fijo del mes), la fecha de apertura depende de cuántos días tenga el mes anterior — siempre <em>su longitud menos 14</em>:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Mes que se abre</th><th class="num">Días del mes anterior</th><th class="num">Abre el</th></tr></thead>
+    <tbody>
+      <tr><td>Septiembre 2026</td><td class="num">31 (agosto)</td><td class="num">17 de agosto</td></tr>
+      <tr><td>Octubre 2026</td><td class="num">30 (septiembre)</td><td class="num">16 de septiembre</td></tr>
+      <tr><td>Noviembre 2026</td><td class="num">31 (octubre)</td><td class="num">17 de octubre</td></tr>
+      <tr><td>Diciembre 2026</td><td class="num">30 (noviembre)</td><td class="num">16 de noviembre</td></tr>
+      <tr><td>Marzo 2027</td><td class="num">28 (febrero)</td><td class="num">14 de febrero</td></tr>
+      <tr><td>Marzo 2028 (bisiesto)</td><td class="num">29 (febrero)</td><td class="num">15 de febrero</td></tr>
+    </tbody>
+  </table></div>
+  <p>La anticipación es siempre idéntica (15 días exactos), pero la fecha cambia: 17, 16, 15 o 14. Como nadie la memoriza, la interfaz muestra un aviso permanente por mes —<em>«Las semanas de octubre se habilitan el 16 de septiembre a las 00:00, hora de Ciudad de México»</em>— y se envía un correo automático el día de la apertura. Si más adelante prefieren una fecha memorizable («siempre el día 15»), es un cambio de configuración, no de código: ambos modos quedan implementados.</p>
+
+  <h3>Semanas a caballo entre dos meses</h3>
+  <p>Como la semana va de viernes a jueves, una o dos de cada mes cruzan el cambio de mes. Por decisión confirmada, <strong>la semana pertenece al mes de su viernes de inicio</strong>: «la semana es del mes en que llegas». Es la regla más fácil de explicar y la que coincide con el dato que ya guarda la base.</p>
+
+  <div class="callout warn">
+    <p class="t">Consecuencia que conviene tener a la vista</p>
+    <p>La semana del <strong>viernes 30 de octubre al jueves 5 de noviembre de 2026</strong> tiene 5 de sus 7 días en noviembre, pero al empezar en octubre se abrirá el <strong>16 de septiembre</strong> — un mes antes que el resto de noviembre, que abre el 17 de octubre. Quien esté atento se lleva el primer puente de noviembre sin esperar su turno.</p>
+    <p>Si más adelante quieren cerrar esa rendija, basta cambiar un parámetro (<code>anchor_offset_days</code> de <code>0</code> a <code>3</code>) para que la semana cuente en el mes donde caen la mayoría de sus días. <strong>No requiere rehacer nada</strong>: el anclaje quedó como configuración desde el primer día, precisamente por esto.</p>
+  </div>
+
+  <h3>Cómo se garantiza</h3>
+  <p>La disponibilidad por ventana es <strong>estado derivado, nunca guardado</strong>. No existe un proceso nocturno que «abra» semanas cambiando su estado: eso duplicaría la verdad y se desincronizaría al cambiar la política. <code>OPEN</code> sigue expresando la intención de Ivonne; la ventana expresa el momento. Son dimensiones independientes que se combinan al consultar.</p>
+  <p>La regla se aplica en tres capas, y el reloj de referencia es <strong>siempre el del servidor</strong>, nunca el del navegador:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Capa</th><th>Qué hace</th></tr></thead>
+    <tbody>
+      <tr><td>Consulta del calendario</td><td>Toda la regla se reduce a comparar un solo valor indexado (<code>anchor_month</code>), así que el filtrado es instantáneo. El usuario no ve botón donde no puede reservar.</td></tr>
+      <tr><td>Servicio, dentro de la transacción</td><td>Revalida antes de insertar. Si el reloj del cliente iba adelantado, responde con la fecha de apertura exacta y la interfaz reintenta sola en lugar de mostrar un error crudo.</td></tr>
+      <tr><td>Restricción en base de datos</td><td>Un trigger sobre <code>reservations</code> rechaza cualquier inserción fuera de ventana, venga de donde venga — un script, una migración o un endpoint futuro.</td></tr>
+    </tbody>
+  </table></div>
+
+  <details>
+    <summary>Ver la función de decisión (TypeScript, compartida entre servidor y cliente)</summary>
+<pre><span class="c">// La configuración refleja las decisiones confirmadas.</span>
+<span class="c">// Cambiar cualquiera de estos valores NO requiere tocar la lógica.</span>
+export const POLITICA_RESERVA = {
+  timeZone:              'America/Mexico_City',
+  modo:                  'OFFSET_DAYS',  <span class="c">// 15 días exactos (alterno: 'FIXED_DAY')</span>
+  diasDeAnticipacion:     15,
+  anchorOffsetDays:        0,     <span class="c">// 0 = mes del viernes de inicio</span>
+                                  <span class="c">// 3 = mes donde caen más días (cierra la rendija)</span>
+  horaApertura:            0,     <span class="c">// 00:00 hora de negocio</span>
+  permitirSemanaEnCurso:   true,
+  horizonteVisibleMeses:   6,
+  superusuarioExento:      true,  <span class="c">// decisión confirmada; queda en bitácora</span>
+}
+
+<span class="c">/** Mes al que pertenece la semana (con offset 0 = el mes del viernes). */</span>
+export function mesAncla(inicioISO, cfg = POLITICA_RESERVA) {
+  return startOfMonth(addDays(medianocheCivil(inicioISO, cfg.timeZone), cfg.anchorOffsetDays))
+}
+
+<span class="c">/** Instante exacto en que un mes se habilita. */</span>
+export function aperturaDelMes(primerDia, cfg = POLITICA_RESERVA) {
+  const previo = addMonths(primerDia, -1)
+  const base = cfg.modo === 'OFFSET_DAYS'
+    ? addDays(primerDia, -cfg.diasDeAnticipacion)
+    : addDays(previo, Math.min(cfg.diaFijo, getDaysInMonth(previo)) - 1)
+  return set(base, { hours: cfg.horaApertura, minutes: 0, seconds: 0, milliseconds: 0 })
+}
+
+<span class="c">/** Única fuente de verdad. `ahora` se inyecta para poder probar con reloj fijo. */</span>
+export function semanaReservable(inicioISO, ahora, cfg = POLITICA_RESERVA) {
+  const inicio     = medianocheCivil(inicioISO, cfg.timeZone)
+  const finExcl    = addDays(inicio, 7)             <span class="c">// jueves 23:59:59</span>
+  const aperturaEn = aperturaDelMes(mesAncla(inicioISO, cfg), cfg)
+
+  if (!isBefore(ahora, finExcl))   return { ok: false, motivo: 'PASADA',        aperturaEn }
+  if (!cfg.permitirSemanaEnCurso &amp;&amp; !isBefore(ahora, inicio))
+                                   return { ok: false, motivo: 'EN_CURSO',      aperturaEn }
+  if (isBefore(ahora, aperturaEn)) return { ok: false, motivo: 'FUERA_VENTANA', aperturaEn }
+  return { ok: true, motivo: 'OK', aperturaEn }
+}</pre>
+  </details>
+
+  <h3>Efecto en el calendario</h3>
+  <p>Aparece <strong>un solo estado visual nuevo</strong>, «Programada»: la semana existe y Ivonne la abrió, pero todavía no es tomable. Se pinta atenuada con la leyenda «Se habilita el 16 de septiembre», con cuenta regresiva cuando faltan menos de 48 horas. Es enfocable con teclado pero no accionable, y el estado nunca se comunica solo por color.</p>
+  <div class="calwrap">
+  <div class="cal" role="img" aria-label="Octubre de 2026 visto el 24 de agosto, en retícula domingo a sábado. La semana del 25 de septiembre al 1 de octubre está disponible; todas las semanas de octubre aparecen programadas con la leyenda Abre el 16 de septiembre, salvo la del 23 al 29 que no tiene apertura. La última semana va del 30 de octubre al 5 de noviembre.">
+    <div class="calbar">
+      <span class="combo">Casa del Lago <span class="car">▾</span></span>
+      <span class="monthnav"><span class="ar">◀</span> Octubre 2026 <span class="ar">▶</span></span>
+    </div>
+    <div class="calhead"><div>DOM</div><div>LUN</div><div>MAR</div><div>MIÉ</div><div>JUE</div><div>VIE</div><div>SÁB</div></div>
+
+    <div class="calrow">
+      <div class="seg open l-open" style="--n:5" data-w="o1">
+        <span class="tag">Disponible</span>
+        <div class="day adj"><span class="dn">27</span></div><div class="day adj"><span class="dn">28</span></div><div class="day adj"><span class="dn">29</span></div><div class="day adj"><span class="dn">30</span></div><div class="day"><span class="dn">1</span></div>
+      </div>
+      <div class="seg sched r-open" style="--n:2" data-w="o2">
+        <div class="day"><span class="dn">2</span></div><div class="day"><span class="dn">3</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg sched l-open" style="--n:5" data-w="o2">
+        <span class="tag">Abre el 16 sep</span>
+        <div class="day"><span class="dn">4</span></div><div class="day"><span class="dn">5</span></div><div class="day"><span class="dn">6</span></div><div class="day"><span class="dn">7</span></div><div class="day"><span class="dn">8</span></div>
+      </div>
+      <div class="seg sched r-open" style="--n:2" data-w="o3">
+        <div class="day"><span class="dn">9</span></div><div class="day"><span class="dn">10</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg sched l-open" style="--n:5" data-w="o3">
+        <span class="tag">Abre el 16 sep</span>
+        <div class="day"><span class="dn">11</span></div><div class="day"><span class="dn">12</span></div><div class="day"><span class="dn">13</span></div><div class="day"><span class="dn">14</span></div><div class="day"><span class="dn">15</span></div>
+      </div>
+      <div class="seg sched r-open" style="--n:2" data-w="o4">
+        <div class="day"><span class="dn">16</span></div><div class="day"><span class="dn">17</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg sched l-open" style="--n:5" data-w="o4">
+        <span class="tag">Abre el 16 sep</span>
+        <div class="day"><span class="dn">18</span></div><div class="day"><span class="dn">19</span></div><div class="day"><span class="dn">20</span></div><div class="day"><span class="dn">21</span></div><div class="day"><span class="dn">22</span></div>
+      </div>
+      <div class="seg noslot r-open" style="--n:2" data-w="o5">
+        <div class="day"><span class="dn">23</span></div><div class="day"><span class="dn">24</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg noslot l-open" style="--n:5" data-w="o5">
+        <span class="tag">Sin apertura</span>
+        <div class="day"><span class="dn">25</span></div><div class="day"><span class="dn">26</span></div><div class="day"><span class="dn">27</span></div><div class="day"><span class="dn">28</span></div><div class="day"><span class="dn">29</span></div>
+      </div>
+      <div class="seg sched r-open" style="--n:2" data-w="o6">
+        <div class="day"><span class="dn">30</span></div><div class="day"><span class="dn">31</span></div>
+      </div>
+    </div>
+
+    <div class="calrow">
+      <div class="seg sched l-open" style="--n:5" data-w="o6">
+        <span class="tag">Abre el 16 sep</span>
+        <div class="day adj"><span class="dn">1</span></div><div class="day adj"><span class="dn">2</span></div><div class="day adj"><span class="dn">3</span></div><div class="day adj"><span class="dn">4</span></div><div class="day adj"><span class="dn">5</span></div>
+      </div>
+      <div class="seg sched r-open" style="--n:2" data-w="o7">
+        <div class="day adj"><span class="dn">6</span></div><div class="day adj"><span class="dn">7</span></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="lg"><i class="sw-sched"></i> Programada</span>
+      <span class="lg"><i class="sw-noslot"></i> Sin apertura</span>
+      <span class="lg"><i class="sw-open"></i> Disponible</span>
+      <span class="lg"><i class="sw-mine"></i> Tu reserva</span>
+      <span class="lg"><i class="sw-other"></i> Reservada</span>
+    </div>
+  </div>
+  </div>
+  <p>La última banda es justamente la semana a caballo del aviso anterior: empieza el <em>viernes 30 de octubre</em> y sus cinco días de noviembre quedan a la vista en la fila de abajo — se ve de un golpe por qué esa semana pesa más en noviembre que en octubre, aunque abra con octubre. El tooltip lo dice explícitamente, porque es el punto de confusión número uno de esta regla.</p>
+
+  <h3>Casos borde resueltos</h3>
+  <ul>
+    <li><strong>Ivonne queda exenta</strong> (decisión confirmada): puede reservar fuera de ventana. Cada vez que lo hace queda marcado en la reserva y registrado en la bitácora con motivo, de modo que la excepción sea visible y no un privilegio silencioso. Abrir, cerrar y anotar mantenimiento nunca estuvo sujeto a la ventana: no son reservas.</li>
+    <li><strong>Semana ya empezada</strong>: se puede tomar hasta el jueves a las 23:59, etiquetada «En curso — quedan N días» para que nadie crea que recibe siete. Se apaga con un parámetro si prefieren lo contrario.</li>
+    <li><strong>Pico del minuto de apertura</strong>: a las 00:00 varios usuarios competirán por la misma semana. El índice único ya resuelve la carrera; se añade límite de peticiones por usuario en ese endpoint.</li>
+    <li><strong>Horario de verano</strong>: México lo eliminó en 2022, así que hoy no hay ambigüedad. Aun así la apertura se recalcula siempre y nunca se guarda, y las 00:00 son seguras incluso si algún día se reinstaurara (los saltos ocurren a las 02:00).</li>
+    <li><strong>Cambiar los 15 días por otro número</strong>: la ventana se evalúa solo al crear la reserva y nunca es retroactiva — ninguna reserva existente se cancela. La política se versiona y cada reserva guarda con cuál se creó. Ampliarla libera semanas de golpe, así que debe anunciarse por correo o alguien se llevará medio mes mientras el resto duerme.</li>
+    <li><strong>Semana liberada fuera de ventana</strong>: si se cancela una reserva de un mes aún no abierto, el aviso «se liberó la semana X» no se envía de inmediato, sino que se programa para el instante de apertura. Anunciar algo que nadie puede tomar solo da ventaja a quien lea el correo a deshoras.</li>
+    <li><strong>Cruce de año</strong>: la semana del viernes 1 de enero de 2027 abre el 17 de diciembre de 2026. El cálculo cruza el año sin casos especiales, con prueba dedicada.</li>
+  </ul>
+</section>
+
+<section id="s8">
+  <h2><span class="n">08</span> Notificaciones</h2>
+  <p>El envío se hará con <strong>Resend</strong>, cuenta ya contratada por el cliente. Los correos saldrán como <code>De: "Wellbros" &lt;notificaciones@…&gt;</code> con <code>Reply-To</code> al buzón de administración: al responder cualquier usuario, la conversación llega a una persona real.</p>
+
+  <div class="callout warn">
+    <p class="t">Lo único que bloquea el envío: un dominio verificado</p>
+    <p>Sin dominio verificado, Resend solo permite enviar desde <code>onboarding@resend.dev</code> y <strong>únicamente a la dirección del dueño de la cuenta</strong>; a cualquier otro destinatario responde error 403. Es decir, sin ese paso la plataforma no puede avisar a ningún usuario. Verificar el dominio requiere crear cuatro registros DNS y suele tardar unos 15 minutos, aunque la propagación puede llegar a 72 horas.</p>
+  </div>
+
+  <h3>Registros DNS a crear</h3>
+  <p>Recomendación: dar de alta un <strong>subdominio dedicado</strong> (<code>notificaciones.sudominio.com</code>) en lugar del dominio raíz. Así la reputación del correo automático queda aislada de la del correo humano y no se toca el SPF que el dominio ya tenga. Los valores exactos los genera el panel de Resend al añadir el dominio — estos son los cuatro registros y su forma:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Propósito</th><th>Tipo</th><th>Nombre</th><th>Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Retorno de rebotes</td><td><code>MX</code></td><td><code>send</code></td><td><code>feedback-smtp.us-east-1.amazonses.com</code> (prioridad 10)</td></tr>
+      <tr><td>SPF del subdominio de envío</td><td><code>TXT</code></td><td><code>send</code></td><td><code>v=spf1 include:amazonses.com ~all</code></td></tr>
+      <tr><td>Firma DKIM</td><td><code>TXT</code></td><td><code>resend._domainkey</code></td><td><code>p=…</code> — clave única generada por Resend</td></tr>
+      <tr><td>Política DMARC (manual)</td><td><code>TXT</code></td><td><code>_dmarc</code></td><td><code>v=DMARC1; p=none; rua=mailto:dmarc@sudominio.com;</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>Tres detalles que hacen fallar la verificación con más frecuencia: el valor del <code>MX</code> <strong>cambia según la región</strong> elegida al crear el dominio, así que hay que copiar el que muestre el panel; casi todos los paneles DNS añaden el dominio solos, por lo que se escribe <code>send</code> y no <code>send.sudominio.com</code>; y en Cloudflare estos registros deben quedar en modo <em>DNS only</em> (nube gris), nunca proxiados.</p>
+  <p>El subdominio <code>send</code> existe porque es la dirección técnica a la que los servidores devuelven los rebotes — por eso necesita un <code>MX</code> propio. Sin él, los rebotes se pierden y Resend no puede avisar que una dirección dejó de existir. El DMARC arranca en <code>p=none</code> (solo observación) y se endurece a <code>quarantine</code> y luego <code>reject</code> tras dos a cuatro semanas leyendo informes.</p>
+
+  <h3>Plan y límites</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Concepto</th><th>Free</th><th>Pro — $20 USD/mes</th></tr></thead>
+    <tbody>
+      <tr><td>Correos por mes</td><td class="num">3 000</td><td class="num">50 000</td></tr>
+      <tr><td>Límite diario</td><td class="num">100</td><td>Sin límite diario</td></tr>
+      <tr><td>Dominios</td><td class="num">3</td><td class="num">10</td></tr>
+      <tr><td>Excedente</td><td>—</td><td>$0.90 USD por cada 1 000</td></tr>
+    </tbody>
+  </table></div>
+  <p>El límite de la API es de <strong>10 peticiones por segundo</strong> por equipo; el worker las estrangula y reintenta con espera creciente ante un 429. La restricción real del plan gratuito es el <strong>tope de 100 correos al día</strong>: como cada reserva genera un correo por usuario, con diez copropietarios bastan diez reservas para agotarlo. <strong>Recomendación: plan Pro al salir a producción</strong>; el gratuito alcanza de sobra para desarrollo y pruebas.</p>
+
+  <h3>Un correo por persona, nunca copia oculta</h3>
+  <p>Cada aviso se envía como un mensaje independiente por destinatario, agrupando hasta 100 en una sola llamada al endpoint de lote. Se obtiene la eficiencia del envío masivo sin ninguna de las desventajas de la copia oculta:</p>
+  <ul>
+    <li><strong>Privacidad estructural</strong>: cada mensaje contiene una sola dirección, así que no existe la posibilidad de filtrar la lista de correos de los copropietarios.</li>
+    <li><strong>Enlaces propios</strong>: cada correo puede llevar el enlace directo a la semana, a la cesión dirigida a esa persona y su saludo por nombre. Con copia oculta el cuerpo es idéntico para todos.</li>
+    <li><strong>Seguimiento real</strong>: los avisos de entrega y rebote llegan por mensaje. Con copia oculta hay un solo identificador y no se sabe a quién le rebotó.</li>
+    <li><strong>Reintentos limpios</strong>: si falla el envío a una persona se reintenta solo ese correo, no el de todos.</li>
+  </ul>
+
+  <h3>Sin duplicados ni avisos perdidos</h3>
+  <p>La cola <code>notification_outbox</code> ya diseñada encaja de forma directa con la idempotencia de Resend: la columna <code>dedupe_key</code> <em>es</em> la clave de idempotencia que se envía en cada llamada, con el formato <code>evento/entidad/usuario</code> — por ejemplo <code>reserva-confirmada/rsv_01HX/usr_42</code>. Si el worker reintenta, Resend reconoce la clave y devuelve la respuesta original <strong>sin volver a enviar el correo</strong>.</p>
+  <p>Dos consecuencias de diseño que hay que respetar: el contenido debe ser <strong>idéntico byte a byte entre reintentos</strong> (nada de «generado el &lt;ahora&gt;»), por lo que el HTML se congela en el propio renglón de la cola en el primer intento; y la ventana de idempotencia dura <strong>24 horas</strong>, así que el worker abandona y escala a Ivonne antes de ese plazo en lugar de reintentar a ciegas y arriesgar un duplicado.</p>
+  <p>Un endpoint <code>/api/webhooks/resend</code> recibe los eventos de entrega, rebote y queja para actualizar el estado de cada aviso y marcar direcciones inválidas. Se verifica la firma sobre el cuerpo crudo y se descartan repetidos por su identificador único, porque Resend puede entregar el mismo evento más de una vez.</p>
+
+  <h3>Qué se avisa y a quién</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Evento</th><th>Destinatarios</th></tr></thead>
+    <tbody>
+      <tr><td>Reserva creada</td><td><strong>Todos los usuarios activos</strong> (requerimiento confirmado).</td></tr>
+      <tr><td>Reserva cancelada</td><td>Propuesta: todos, porque la semana vuelve a estar disponible — por confirmar, §12.</td></tr>
+      <tr><td>Días cedidos o cesión revocada</td><td>Propuesta: solo involucrados + Ivonne — por confirmar, §12.</td></tr>
+      <tr><td>Semanas nuevas abiertas</td><td>Propuesta: todos, agrupado en un correo por tanda — por confirmar, §12.</td></tr>
+      <tr><td><strong>Mes habilitado</strong> («ya puedes reservar octubre»)</td><td>Todos, enviado automáticamente en el instante de apertura de la ventana (§07).</td></tr>
+      <tr><td>Usuario creado</td><td>Solo el nuevo usuario (bienvenida y definición de contraseña).</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Pruebas sin gastar cuota</h3>
+  <p>En desarrollo no se llama a Resend: un adaptador local entrega los correos a un buzón de pruebas en la propia máquina, donde se ven renderizados en el navegador. En preproducción sí se usa Resend real contra sus direcciones de simulación (<code>delivered@</code>, <code>bounced@</code> y <code>complained@resend.dev</code>) para validar la cadena completa: envío, identificador guardado, webhook firmado, cambio de estado y bitácora. Conviene una clave de API distinta para pruebas, revocable sin tocar producción.</p>
+
+  <h3>WhatsApp: preparado, no activo</h3>
+  <p>La plataforma queda lista para activar <strong>WhatsApp Business Cloud API</strong> (Meta) cuando exista el número: el canal ya está en la base de datos (deshabilitado), los usuarios tienen campo de teléfono con consentimiento, y la configuración prevé token permanente, identificador del número emisor, cuenta de negocio y el mapa de plantillas preaprobadas por evento — obligatorias para mensajes que inicia el negocio. Costo de referencia en México: del orden de US$0.01–0.05 por mensaje de utilidad. Activarlo será configuración, no desarrollo.</p>
+</section>
+
+<section id="s9">
+  <h2><span class="n">09</span> Seguridad y bitácora</h2>
+  <ul>
+    <li><strong>Autorización en la API, no en la interfaz</strong>: cada endpoint valida rol y propiedad de los recursos. La bitácora «oculta» no es solo una ruta escondida — está protegida en servidor.</li>
+    <li><strong>Bitácora de solo-escritura</strong>: al rol de base de datos de la aplicación se le revoca UPDATE y DELETE sobre <code>audit_log</code>; ni un error de código puede reescribir la historia. Registra todos los eventos relevantes (decisión confirmada) con actor, acción, entidad y snapshot.</li>
+    <li><strong>Contraseñas</strong> con hash Argon2; sesiones httpOnly; límite de intentos de login en Nginx y en la aplicación.</li>
+    <li><strong>Privacidad entre usuarios</strong>: correos siempre en copia oculta; en el calendario se muestra el nombre (alcance exacto por confirmar, §12), nunca el correo ni el teléfono de otros.</li>
+    <li><strong>Rol como dato, no como código</strong>: <code>SUPERUSER</code> es un enum en la base — si mañana se necesita una segunda administradora, es un UPDATE, no un desarrollo. Mitiga el punto único de fallo humano.</li>
+  </ul>
+</section>
+
+<section id="s10">
+  <h2><span class="n">10</span> Despliegue en Debian 13</h2>
+  <p><strong>Node 22 LTS gestionado por systemd</strong> (sin Docker: una sola aplicación y un Postgres ya provisionado no justifican la capa extra; systemd da reinicio automático y logs en journald). La app escucha solo en <code>127.0.0.1:3000</code>; <strong>Nginx</strong> hace de reverse proxy con certificado de <strong>Let's Encrypt</strong> y renovación automática — HTTPS es además requisito para que la PWA sea instalable. El worker de notificaciones corre como segundo servicio systemd.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Aspecto</th><th>Plan</th></tr></thead>
+    <tbody>
+      <tr><td>Servicios</td><td><code>wellbros.service</code> (Next.js) y <code>wellbros-worker.service</code> (correo), usuario de sistema sin privilegios, hardening de systemd.</td></tr>
+      <tr><td>Migraciones</td><td><code>prisma migrate deploy</code> en cada despliegue, siempre precedido de un respaldo; migraciones aditivas primero.</td></tr>
+      <tr><td>Respaldos</td><td><code>pg_dump</code> diario por cron (retención 14 diarios / 8 semanales / 12 mensuales) + copia fuera del servidor con rclone; restauración probada trimestralmente.</td></tr>
+      <tr><td>Firewall</td><td>ufw: solo 22 (SSH con llaves), 80 y 443; fail2ban; Postgres escuchando solo en localhost; parches de seguridad automáticos.</td></tr>
+      <tr><td>Monitoreo</td><td>Endpoint <code>/api/health</code> (verifica Postgres) vigilado por un monitor externo gratuito con alerta por correo; logs JSON en journald; alerta de disco.</td></tr>
+      <tr><td>Actualizaciones</td><td><code>deploy.sh</code>: respaldo → git → build (aborta antes de tocar nada si falla) → migraciones → reinicio → verificación. Cada despliegue etiquetado para rollback.</td></tr>
+    </tbody>
+  </table></div>
+  <p>La API queda versionada en <code>/api/v1/*</code> y el middleware de autenticación aceptará cookie <em>o</em> Bearer token desde el inicio: si algún día se decide una app nativa (Expo), el backend no cambia.</p>
+</section>
+
+<section id="s11">
+  <h2><span class="n">11</span> Plan de construcción</h2>
+  <p>Cinco fases en orden de dependencia; cada una termina en algo verificable.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th class="num">Fase</th><th>Contenido</th><th>Lista cuando…</th></tr></thead>
+    <tbody>
+      <tr><td class="num">0 · Fundaciones</td><td>Proyecto Next.js 15 + Tailwind + shadcn/ui + Prisma; esquema completo de base de datos con migraciones y seed de la superusuaria; autenticación con roles; temas claro/oscuro.</td><td>Ivonne puede entrar, crear un usuario y ese usuario puede entrar; el tema se conserva.</td></tr>
+      <tr><td class="num">1 · Núcleo</td><td>Propiedades y gestor de slots (apertura en lote de viernes); calendario mensual domingo–sábado con las semanas viernes→jueves dibujadas como banda de dos tramos; reservar y cancelar con las transacciones de §06; <strong>ventana de apertura de 15 días con sus tres capas de validación</strong>; bitácora.</td><td>Dos navegadores compitiendo por la misma semana: uno gana, el otro recibe el mensaje correcto. Con el reloj adelantado a la fecha de apertura, un mes bloqueado se vuelve reservable solo; la cancelación de Ivonne aparece en la bitácora.</td></tr>
+      <tr><td class="num">2 · Cesiones y correo</td><td>Cesión y revocación de días con su interfaz; cola de notificaciones + worker sobre Resend con idempotencia y envío por lotes; webhook de entregas y rebotes; plantillas en español; panel de avisos no entregados.</td><td>Una reserva dispara correo real a todos, uno por persona; un reintento del worker no duplica nada; una cesión pinta el día con el receptor y le avisa.</td></tr>
+      <tr><td class="num">3 · En vivo y PWA</td><td>SSE con revalidación; manifest + service worker; vista móvil de tarjetas; accesibilidad y pulido visual de ambos temas.</td><td>Una reserva hecha en un teléfono aparece sola en la laptop; la app se instala en Android e iOS.</td></tr>
+      <tr><td class="num">4 · Producción</td><td>Despliegue completo en el Debian 13: servicios, Nginx + TLS, respaldos, firewall, monitoreo, script de deploy documentado.</td><td>La plataforma responde en su dominio con HTTPS, el respaldo diario existe y una restauración fue probada.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s12">
+  <h2><span class="n">12</span> Preguntas abiertas</h2>
+  <p>Nada de esto bloquea el inicio de la construcción (fases 0–1), pero debe resolverse antes de las fases indicadas. Las cuatro primeras son las que hay que mover ya, porque dependen de terceros.</p>
+  <ol class="qa">
+    <li><span class="qt">Dominio para el correo</span><span class="qr">Es ahora el camino crítico: sin dominio verificado en Resend no se puede avisar a nadie. Hace falta el nombre del dominio y decidir si se registra el raíz o un subdominio dedicado — recomiendo <code>notificaciones.sudominio.com</code>. (Fase 2)</span></li>
+    <li><span class="qt">Acceso al panel DNS</span><span class="qr">Quien administre el DNS debe poder crear registros TXT y MX. Puedo entregar los cuatro valores exactos ya listos para copiar y pegar. (Fase 2)</span></li>
+    <li><span class="qt">Clave de API de Resend</span><span class="qr">Creada con permiso de solo envío y restringida al dominio; conviene una para producción y otra para pruebas. Su valor <strong>no se puede volver a consultar</strong> después de crearla, así que debe llegar por gestor de contraseñas, nunca por correo o chat. (Fase 2)</span></li>
+    <li><span class="qt">Buzón de respuestas</span><span class="qr">La dirección del <code>Reply-To</code> sí debe ser un buzón real y atendido, porque ahí caerán las respuestas de los copropietarios. ¿El Hotmail de Ivonne o una cuenta del dominio? (Fase 2)</span></li>
+    <li><span class="qt">Plan de Resend</span><span class="qr">El plan gratuito tiene tope de 100 correos al día. Como cada reserva genera un correo por usuario, se agota rápido: con diez copropietarios, diez reservas en un día. Recomiendo Pro ($20 USD/mes) al salir a producción. (Fase 2)</span></li>
+    <li><span class="qt">Zona horaria de referencia</span><span class="qr">Propongo <code>America/Mexico_City</code> — o <code>America/Cancun</code> si las propiedades están en Quintana Roo. Define el corte «viernes 00:00», la hora de apertura de la ventana y qué día es «hoy». (Fase 1)</span></li>
+    <li><span class="qt">Semanas a caballo entre dos meses</span><span class="qr">Quedó confirmado anclar al viernes de inicio. Conviene tener presente su efecto: la semana del 30 de octubre de 2026 arrastra cinco días de noviembre y se abrirá un mes antes que el resto de noviembre. Si prefieren cerrarlo, es cambiar un parámetro. (Fase 1)</span></li>
+    <li><span class="qt">Semana ya empezada</span><span class="qr">Propongo permitir tomarla hasta el jueves 23:59, marcada «quedan N días». La alternativa es que una semana en curso deje de ser reservable. (Fase 1)</span></li>
+    <li><span class="qt">Accesos del servidor</span><span class="qr">Acceso SSH al Debian 13 y datos del PostgreSQL (¿corre en la misma máquina?). (Fase 4)</span></li>
+    <li><span class="qt">Alcance de los correos</span><span class="qr">Al reservar: todos (confirmado). Propongo: cancelación → todos; cesiones → solo involucrados + Ivonne; apertura de semanas nuevas y de mes → todos. ¿De acuerdo? (Fase 2)</span></li>
+    <li><span class="qt">Semana liberada tras una cancelación</span><span class="qr">Propongo que vuelva a quedar disponible automáticamente; la alternativa es que Ivonne decida reabrirla. (Fase 1)</span></li>
+    <li><span class="qt">Alta de usuarios y contraseñas</span><span class="qr">Propongo: correo de invitación con enlace para que cada usuario defina su contraseña, y «olvidé mi contraseña» en autoservicio. La alternativa es contraseña temporal que Ivonne comunica. (Fase 0)</span></li>
+    <li><span class="qt">Privacidad en el calendario</span><span class="qr">¿Los usuarios ven el nombre completo de quien reservó, o solo nombre de pila? (Fase 1)</span></li>
+    <li><span class="qt">Poderes de Ivonne al reservar</span><span class="qr">¿Podrá reservar en nombre de otro usuario (p. ej. por teléfono)? Para bloquear semanas por uso propio u obra, lo correcto es cerrar el slot, no crear una reserva ficticia. (Fase 1)</span></li>
+    <li><span class="qt">Nombre de la plataforma</span><span class="qr">Uso «Wellbros» por la carpeta del proyecto; confirmen el nombre definitivo — aparece en la interfaz, los correos y el icono de la app instalada. (Fase 0)</span></li>
+  </ol>
+</section>
+
+<section id="s13">
+  <h2><span class="n">13</span> Contemplado a futuro</h2>
+  <p>No se construyen ahora, pero el esquema y la arquitectura ya los dejan baratos:</p>
+  <ul>
+    <li><strong>WhatsApp</strong> — activar el canal ya preparado cuando exista el número (§08).</li>
+    <li><strong>Recordatorios previos al viernes de inicio</strong> — la cola de notificaciones ya da la infraestructura; solo falta el disparador programado.</li>
+    <li><strong>Calendario iCal</strong> — un feed por propiedad y «mis reservas» para verlas en Google/Apple Calendar sin abrir la app.</li>
+    <li><strong>Lista de espera</strong> — apuntarse a una semana ocupada y recibir aviso automático si se libera.</li>
+    <li><strong>Reporte de equidad de uso</strong> — semanas usadas por usuario, propiedad y año; en propiedades compartidas, tener el dato desactiva el conflicto típico.</li>
+    <li><strong>Apertura masiva de temporadas</strong> — abrir de golpe todos los viernes de un rango (p. ej. todo 2027); prevista desde el gestor de slots.</li>
+    <li><strong>App nativa (Expo)</strong> — la API versionada y la autenticación dual ya lo permiten sin tocar el backend; se sumaría notificación push.</li>
+    <li><strong>Segunda administradora</strong> — el rol es un dato, no código.</li>
+  </ul>
+</section>
+
+<footer>
+  Wellbros · Documento de diseño v2 · 24 de agosto de 2026 · Incorpora la ventana de apertura de 15 días y la configuración de correo con Resend.
+</footer>
+
+</div>
+
+<script>
+  // Los dos tramos de una misma semana reservable se resaltan juntos.
+  (function () {
+    var segs = document.querySelectorAll('.seg[data-w]');
+    function marcar(w, on) {
+      document.querySelectorAll('.seg[data-w="' + w + '"]').forEach(function (s) {
+        s.classList.toggle('hl', on);
+      });
+    }
+    segs.forEach(function (seg) {
+      var w = seg.getAttribute('data-w');
+      seg.addEventListener('mouseenter', function () { marcar(w, true); });
+      seg.addEventListener('mouseleave', function () { marcar(w, false); });
+    });
+  })();
+</script>

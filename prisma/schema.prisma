@@ -1,0 +1,376 @@
+// Wellbros — esquema de datos
+//
+// Principios (ver docs/diseno-wellbros.html §05):
+//  - Las semanas se guardan como FECHAS DE CALENDARIO (@db.Date), nunca timestamps:
+//    inmune a husos horarios y horario de verano.
+//  - Nada se borra físicamente: usuarios y propiedades se desactivan; reservas y
+//    cesiones cambian de estado.
+//  - Las invariantes críticas viven en PostgreSQL (índices parciales, CHECK,
+//    columnas generadas y triggers), no solo en la aplicación. Todo eso se define
+//    en migraciones SQL, porque Prisma no lo expresa: ver prisma/migrations/.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────────────────────── enums
+
+enum UserRole {
+  SUPERUSER
+  USER
+
+  @@map("user_role")
+}
+
+enum SlotStatus {
+  OPEN
+  RESERVED
+  CLOSED
+
+  @@map("slot_status")
+}
+
+enum ReservationStatus {
+  ACTIVE
+  CANCELLED
+
+  @@map("reservation_status")
+}
+
+enum GrantStatus {
+  ACTIVE
+  REVOKED
+  CANCELLED
+
+  @@map("grant_status")
+}
+
+enum NotifChannel {
+  EMAIL
+  WHATSAPP
+
+  @@map("notif_channel")
+}
+
+enum OutboxStatus {
+  PENDING
+  SENDING
+  SENT
+  FAILED
+  DEAD
+
+  @@map("outbox_status")
+}
+
+enum ReleaseMode {
+  OFFSET_DAYS
+  FIXED_DAY
+
+  @@map("release_mode")
+}
+
+enum SuperuserOverride {
+  ALWAYS_EXEMPT
+  AUDITED
+  NEVER
+
+  @@map("superuser_override")
+}
+
+// ─────────────────────────────────────────────────────────── usuarios
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique @db.Citext
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  /// E.164 (+52...). Preparado para WhatsApp; nulo mientras no haya número.
+  phone        String?  @db.VarChar(20)
+  whatsappOptIn Boolean @default(false) @map("whatsapp_opt_in")
+  role         UserRole @default(USER)
+  /// 'light' | 'dark' | 'system'
+  theme        String   @default("system") @db.VarChar(10)
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  sessions          Session[]
+  slotsCreated      WeekSlot[]         @relation("SlotCreatedBy")
+  reservations      Reservation[]      @relation("ReservationOwner")
+  reservationsCancelled Reservation[]  @relation("ReservationCancelledBy")
+  grantsGiven       DayGrant[]         @relation("GrantGrantor")
+  grantsReceived    DayGrant[]         @relation("GrantGrantee")
+  maintenanceNotes  MaintenanceNote[]
+  auditEntries      AuditLog[]
+  outboxMessages    NotificationOutbox[]
+  policiesUpdated   BookingPolicy[]
+
+  @@index([isActive])
+  @@map("users")
+}
+
+/// Sesión con token opaco: en la base solo vive el HASH del token,
+/// nunca el token mismo (que va en la cookie httpOnly).
+model Session {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  tokenHash  String   @unique @map("token_hash")
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(6)
+  ip         String?  @db.VarChar(64)
+  userAgent  String?  @map("user_agent")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ─────────────────────────────────────────────────────── propiedades
+
+model Property {
+  id        String   @id @default(uuid()) @db.Uuid
+  /// Texto libre: es lo que muestra el combo sobre el calendario.
+  name      String   @unique
+  /// Color de identidad: uno de los ocho de src/lib/property-color.ts.
+  /// Tiñe el cromo del calendario, nunca los estados de la semana.
+  color     String   @default("indigo") @db.VarChar(20)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  slots            WeekSlot[]
+  maintenanceNotes MaintenanceNote[]
+  policies         BookingPolicy[]
+
+  @@index([isActive])
+  @@map("properties")
+}
+
+// ──────────────────────────────────────────────────── slots de semana
+
+model WeekSlot {
+  id         String     @id @default(uuid()) @db.Uuid
+  propertyId String     @map("property_id") @db.Uuid
+  /// Siempre viernes (CHECK en migración: EXTRACT(ISODOW) = 5).
+  startDate  DateTime   @map("start_date") @db.Date
+  /// Jueves. Columna GENERADA en la base (start_date + 6): ver migración.
+  endDate    DateTime   @default(dbgenerated()) @map("end_date") @db.Date
+  /// Mes al que pertenece la semana para la ventana de apertura.
+  /// Columna GENERADA (date_trunc('month', start_date + anchor_offset)): ver migración.
+  anchorMonth DateTime  @default(dbgenerated()) @map("anchor_month") @db.Date
+  status     SlotStatus @default(OPEN)
+  createdById String    @map("created_by") @db.Uuid
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  property     Property      @relation(fields: [propertyId], references: [id])
+  createdBy    User          @relation("SlotCreatedBy", fields: [createdById], references: [id])
+  reservations Reservation[]
+
+  @@unique([propertyId, startDate])
+  @@index([propertyId, anchorMonth, startDate])
+  @@index([propertyId, status, startDate])
+  @@map("week_slots")
+}
+
+// ──────────────────────────────────────────────────────────── reservas
+
+model Reservation {
+  id       String            @id @default(uuid()) @db.Uuid
+  slotId   String            @map("slot_id") @db.Uuid
+  userId   String            @map("user_id") @db.Uuid
+  status   ReservationStatus @default(ACTIVE)
+
+  /// Política de ventana vigente cuando se creó: permite explicar años
+  /// después bajo qué regla se reservó.
+  policyId       String?  @map("policy_id") @db.Uuid
+  /// La creó el superusuario saltándose la ventana de apertura.
+  windowOverride Boolean  @default(false) @map("window_override")
+  overrideReason String?  @map("override_reason")
+
+  cancelledAt   DateTime? @map("cancelled_at") @db.Timestamptz(6)
+  cancelledById String?   @map("cancelled_by") @db.Uuid
+  cancelReason  String?   @map("cancel_reason")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  slot        WeekSlot       @relation(fields: [slotId], references: [id])
+  user        User           @relation("ReservationOwner", fields: [userId], references: [id])
+  cancelledBy User?          @relation("ReservationCancelledBy", fields: [cancelledById], references: [id])
+  policy      BookingPolicy? @relation(fields: [policyId], references: [id])
+  dayGrants   DayGrant[]
+
+  // La unicidad real ("un slot, una reserva ACTIVA") es un índice único PARCIAL
+  // que Prisma no expresa: se crea en la migración.
+  @@index([userId, status])
+  @@index([slotId])
+  @@map("reservations")
+}
+
+// ─────────────────────────────────────────────────── cesiones de días
+
+model DayGrant {
+  id            String      @id @default(uuid()) @db.Uuid
+  reservationId String      @map("reservation_id") @db.Uuid
+  /// Dueño de la reserva al momento de ceder (snapshot).
+  grantorUserId String      @map("grantor_user_id") @db.Uuid
+  granteeUserId String      @map("grantee_user_id") @db.Uuid
+  grantDate     DateTime    @map("grant_date") @db.Date
+  /// REVOKED = el dueño la retiró. CANCELLED = cayó al cancelar la reserva.
+  status        GrantStatus @default(ACTIVE)
+  endedAt       DateTime?   @map("ended_at") @db.Timestamptz(6)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  grantor     User        @relation("GrantGrantor", fields: [grantorUserId], references: [id])
+  grantee     User        @relation("GrantGrantee", fields: [granteeUserId], references: [id])
+
+  // Unicidad parcial (un día no se cede dos veces) + validación cruzada
+  // por trigger: ver migración.
+  @@index([granteeUserId, status, grantDate])
+  @@index([reservationId])
+  @@map("day_grants")
+}
+
+// ───────────────────────────────────────────── notas de mantenimiento
+
+model MaintenanceNote {
+  id          String   @id @default(uuid()) @db.Uuid
+  propertyId  String   @map("property_id") @db.Uuid
+  startDate   DateTime @map("start_date") @db.Date
+  endDate     DateTime @map("end_date") @db.Date
+  note        String
+  createdById String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  property  Property @relation(fields: [propertyId], references: [id])
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  @@index([propertyId, startDate])
+  @@map("maintenance_notes")
+}
+
+// ────────────────────────────────────────── política de reserva (ventana)
+
+/// Versionada: nunca se hace UPDATE destructivo. La fila vigente es la de
+/// mayor `effectiveFrom` <= now(), prefiriendo la específica de la propiedad
+/// sobre la global (propertyId = null).
+model BookingPolicy {
+  id         String  @id @default(uuid()) @db.Uuid
+  /// null = política global por defecto.
+  propertyId String? @map("property_id") @db.Uuid
+
+  timeZone           String            @default("America/Mexico_City") @map("time_zone")
+  mode               ReleaseMode       @default(OFFSET_DAYS)
+  /// Días exactos de anticipación (modo OFFSET_DAYS).
+  bookingWindowDays  Int               @default(15) @map("booking_window_days")
+  /// Día fijo del mes (modo FIXED_DAY).
+  releaseDayOfMonth  Int               @default(15) @map("release_day_of_month")
+  releaseHour        Int               @default(0) @map("release_hour")
+  releaseMinute      Int               @default(0) @map("release_minute")
+  /// 0 = la semana cuenta en el mes de su viernes de inicio (decisión confirmada).
+  /// 3 = cuenta en el mes donde caen más días. 6 = exige la semana completa.
+  anchorOffsetDays   Int               @default(0) @map("anchor_offset_days")
+  allowInProgressWeek Boolean          @default(true) @map("allow_in_progress_week")
+  visibleHorizonMonths Int             @default(6) @map("visible_horizon_months")
+  superuserOverride  SuperuserOverride @default(ALWAYS_EXEMPT) @map("superuser_override")
+
+  effectiveFrom DateTime @default(now()) @map("effective_from") @db.Timestamptz(6)
+  updatedById   String?  @map("updated_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  property     Property?     @relation(fields: [propertyId], references: [id])
+  updatedBy    User?         @relation(fields: [updatedById], references: [id])
+  reservations Reservation[]
+
+  @@index([propertyId, effectiveFrom])
+  @@map("booking_policy")
+}
+
+// ───────────────────────────────────────────────── bitácora (oculta)
+
+/// Append-only: al rol de base de datos de la aplicación se le revocan
+/// UPDATE y DELETE sobre esta tabla (ver migración).
+model AuditLog {
+  id          BigInt   @id @default(autoincrement())
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id") @db.Uuid
+  details     Json     @default("{}")
+  ip          String?  @db.VarChar(64)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([createdAt(sort: Desc)])
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+  @@map("audit_log")
+}
+
+// ──────────────────────────────────────────────────── notificaciones
+
+model NotificationChannelConfig {
+  channel   NotifChannel @id
+  isEnabled Boolean      @map("is_enabled")
+  /// Datos NO sensibles (remitente, nombre visible, plantillas).
+  /// Las credenciales viven en variables de entorno, nunca aquí.
+  config    Json         @default("{}")
+  updatedAt DateTime     @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("notification_channels")
+}
+
+/// Patrón outbox: el aviso se encola en la MISMA transacción que el evento
+/// de negocio. Un worker aparte lo envía con reintentos.
+model NotificationOutbox {
+  id                String       @id @default(uuid()) @db.Uuid
+  channel           NotifChannel
+  recipientUserId   String       @map("recipient_user_id") @db.Uuid
+  /// Snapshot de la dirección al encolar.
+  recipientAddress  String       @map("recipient_address")
+  eventType         String       @map("event_type")
+  payload           Json
+  /// Asunto y cuerpo CONGELADOS en el primer intento: los reintentos deben
+  /// enviar exactamente lo mismo o Resend responde 409 al deduplicar.
+  renderedSubject   String?      @map("rendered_subject")
+  renderedHtml      String?      @map("rendered_html")
+  renderedText      String?      @map("rendered_text")
+  /// Clave de idempotencia enviada a Resend: evento/entidad/usuario.
+  dedupeKey         String       @unique @map("dedupe_key")
+  status            OutboxStatus @default(PENDING)
+  attempts          Int          @default(0)
+  /// Envío diferido: usado para anunciar un mes justo al abrirse.
+  scheduledFor      DateTime     @default(now()) @map("scheduled_for") @db.Timestamptz(6)
+  nextAttemptAt     DateTime     @default(now()) @map("next_attempt_at") @db.Timestamptz(6)
+  lastError         String?      @map("last_error")
+  providerMessageId String?      @map("provider_message_id")
+  sentAt            DateTime?    @map("sent_at") @db.Timestamptz(6)
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  recipient User @relation(fields: [recipientUserId], references: [id])
+
+  @@index([status, scheduledFor, nextAttemptAt])
+  @@index([providerMessageId])
+  @@map("notification_outbox")
+}
+
+/// Deduplicación de webhooks de Resend, que se entregan al menos una vez.
+model WebhookEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  svixId     String   @unique @map("svix_id")
+  eventType  String   @map("event_type")
+  payload    Json
+  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
+
+  @@map("webhook_events")
+}

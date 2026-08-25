@@ -1,26 +1,373 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CAPA WELLBROS
+   ══════════════════════════════════════════════════════════════════════
+
+   Va DESPUÉS de los bloques de shadcn a propósito: misma especificidad,
+   gana el último. Así se reafina la paleta neutra sin editar una sola
+   línea de lo que shadcn escribió, y una futura actualización de sus
+   componentes no se lleva por delante estos valores.
+
+   Dos grupos:
+
+   1. Neutros y marca — los mismos tokens de shadcn, con los valores del
+      documento de diseño (§04): fondo papel cálido en claro, azul noche
+      en oscuro, acento agua. Sin esto la aplicación sale gris neutro y
+      no se parece a la maqueta.
+
+   2. Variables --wb-* — las que consumen los componentes del calendario
+      (src/components/calendar/types.ts). Allí cada color se pide como
+      `var(--wb-open-bg,#DCF5E3)`: el respaldo literal mantiene el
+      calendario en pie aunque este archivo desaparezca, y en cuanto la
+      variable existe toma el control.
+
+   REGLA AL TOCAR ESTO: toda variable --wb-* se declara COMPLETA en el
+   bloque claro. En `.dark` solo se redefine la que cambia. Una variable
+   que solo exista en el bloque oscuro deja el tema claro roto, porque
+   los componentes usan el MISMO nombre en ambos temas y solo cambian el
+   respaldo. */
+
+:root {
+  /* ── Neutros y marca (documento de diseño §04) ── */
+  --background: #f6f4ee;
+  --foreground: #202b36;
+  --card: #ffffff;
+  --card-foreground: #202b36;
+  --popover: #ffffff;
+  --popover-foreground: #202b36;
+  --primary: #0e7490;
+  --primary-foreground: #ffffff;
+  --secondary: #efece3;
+  --secondary-foreground: #202b36;
+  --muted: #efece3;
+  --muted-foreground: #63707d;
+  --accent: #efece3;
+  --accent-foreground: #202b36;
+  --border: #e0dcd0;
+  --input: #e0dcd0;
+  --ring: #0e7490;
+
+  /* ── Acento de la aplicación ──
+     Lo usan el anillo de resaltado de la semana y el número de hoy en la
+     retícula, además de la navegación. */
+  --wb-accent: #0e7490;
+  --wb-accent-ink: #0b5e75;
+  --wb-accent-soft: #dceef2;
+  /* Tinta del círculo de "hoy": va sobre el color del propio estado. */
+  --wb-today-ink: #ffffff;
+
+  /* ── RESERVABLE / EN_CURSO: verde ── */
+  --wb-open-bg: #dcf5e3;
+  --wb-open-bd: #2f9e5b;
+  --wb-open-fg: #1b6b3c;
+  /* El chip solo se usa en tema claro; en oscuro los componentes pintan
+     el chip con --wb-open-bd. Igual para --wb-sched-chip y --wb-ceded-chip. */
+  --wb-open-chip: #166534;
+
+  /* ── PROGRAMADA: gris pizarra ── */
+  --wb-sched-bg: #e9edf3;
+  --wb-sched-bd: #90a0b4;
+  --wb-sched-fg: #4e5f76;
+  --wb-sched-chip: #52627a;
+
+  /* ── RESERVADA (de otra persona): violeta ── */
+  --wb-other-bg: #ece7f9;
+  --wb-other-bd: #7c5cd6;
+  --wb-other-fg: #55349e;
+
+  /* ── MIA: azul ── */
+  --wb-mine-bg: #dbeafe;
+  --wb-mine-bd: #2563eb;
+  --wb-mine-fg: #1e40af;
+
+  /* ── CERRADA: ámbar rayado ── */
+  --wb-closed-bg: #fceec8;
+  --wb-closed-bd: #a16207;
+  --wb-closed-fg: #7a4a05;
+  /* Rayado diagonal sobre el fondo: translúcido para que el color del
+     estado siga leyéndose por debajo. */
+  --wb-closed-stripe: rgba(161, 98, 7, 0.2);
+
+  /* ── SIN_APERTURA: papel apagado ── */
+  --wb-noslot-bg: #f0ede4;
+  --wb-noslot-bd: #dad5c6;
+  --wb-noslot-fg: #8c9184;
+
+  /* ── PASADA: gris frío ── */
+  --wb-past-bg: #f3f2ef;
+  --wb-past-bd: #dedcd6;
+  --wb-past-fg: #8e8e87;
+
+  /* ── Día cedido: teal ── */
+  --wb-ceded-bg: #cdf2ea;
+  --wb-ceded-bd: #0d9488;
+  --wb-ceded-chip: #0f766e;
+
+  /* ── Mantenimiento: punto ámbar. Informa, no bloquea. ── */
+  --wb-maint-fg: #a16207;
+
+  /* La barra de desplazamiento y los controles nativos siguen al tema. */
+  color-scheme: light;
+}
+
+.dark {
+  /* ── Neutros y marca ── */
+  --background: #0e1621;
+  --foreground: #e6edf4;
+  --card: #16212e;
+  --card-foreground: #e6edf4;
+  --popover: #16212e;
+  --popover-foreground: #e6edf4;
+  --primary: #3fc1d3;
+  --primary-foreground: #06222b;
+  --secondary: #1b2836;
+  --secondary-foreground: #e6edf4;
+  --muted: #1b2836;
+  --muted-foreground: #8da0b2;
+  --accent: #1b2836;
+  --accent-foreground: #e6edf4;
+  --border: #27384a;
+  --input: #27384a;
+  --ring: #3fc1d3;
+
+  /* ── Solo lo que cambia respecto al bloque claro ── */
+  --wb-accent: #3fc1d3;
+  --wb-accent-ink: #6ad3e2;
+  --wb-accent-soft: #113a47;
+  --wb-today-ink: #0b1116;
+
+  --wb-open-bg: #0b3320;
+  --wb-open-bd: #34c56f;
+  --wb-open-fg: #8fe7b4;
+
+  --wb-sched-bg: #172230;
+  --wb-sched-bd: #46586d;
+  --wb-sched-fg: #93a6bc;
+
+  --wb-other-bg: #291b4e;
+  --wb-other-bd: #9b7bf0;
+  --wb-other-fg: #cbb8f8;
+
+  --wb-mine-bg: #102c5c;
+  --wb-mine-bd: #4c8df6;
+  --wb-mine-fg: #a3c6fb;
+
+  --wb-closed-bg: #392a08;
+  --wb-closed-bd: #efc257;
+  --wb-closed-fg: #efc257;
+  --wb-closed-stripe: rgba(239, 194, 87, 0.22);
+
+  --wb-noslot-bg: #131d29;
+  --wb-noslot-bd: #232e3b;
+  --wb-noslot-fg: #55636f;
+
+  --wb-past-bg: #12171d;
+  --wb-past-bd: #222a33;
+  --wb-past-fg: #5c6670;
+
+  --wb-ceded-bg: #062f2b;
+  --wb-ceded-bd: #23bba7;
+
+  --wb-maint-fg: #efc257;
+
+  color-scheme: dark;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   COLOR DE PROPIEDAD
+   ══════════════════════════════════════════════════════════════════════
+
+   Cada propiedad tiene un color de identidad (src/lib/property-color.ts).
+   El contenedor del calendario recibe EN LÍNEA las cuatro variantes que
+   emite `propertyColorStyle`:
+
+     --wb-prop-light   --wb-prop-dark   --wb-prop-soft-light   --wb-prop-soft-dark
+
+   y es ESTA hoja la que decide cuál manda, según el tema. Los componentes
+   solo piden `--wb-prop` y `--wb-prop-soft`, sin enterarse de nada más.
+
+   POR QUÉ SE RESUELVE AQUÍ Y NO EN EL SERVIDOR: el tema lo elige cada
+   persona y se aplica con la clase `dark` que el script en línea del <head>
+   pone antes del primer pintado (src/app/layout.tsx). El servidor NO sabe
+   qué tema tiene quien pide la página —puede venir de `prefers-color-scheme`,
+   que solo existe en el navegador—, así que si eligiera allí entre el color
+   claro y el oscuro acertaría a medias y la otra mitad de las veces se vería
+   el parpadeo de un color cambiando bajo los pies al hidratar. Emitiendo las
+   cuatro y resolviendo en CSS, el color correcto ya está puesto en el primer
+   fotograma y cambiar de tema no exige volver al servidor.
+
+   DÓNDE SE APLICA: solo en el CROMO —riel y borde de la tarjeta, barra fija,
+   punto del combo, título del mes—. NUNCA en los estados de la semana: verde
+   = disponible, azul = tuya, violeta = de otro, gris pizarra = programada son
+   significados aprendidos que valen igual en todas las propiedades. Si el
+   color de la propiedad los pisara, se perdería la única señal que dice si se
+   puede reservar.
+
+   EL RESPALDO ES ÍNDIGO, el mismo valor por omisión de `properties.color`:
+   un contenedor que llegara sin variables en línea conserva identidad en vez
+   de quedarse sin color. Por eso `:root` entra en el mismo selector — así
+   `var(--wb-prop)` resuelve incluso fuera de un contenedor marcado. */
+
+:root,
+[data-wb-prop] {
+  --wb-prop: var(--wb-prop-light, #4338ca);
+  --wb-prop-soft: var(--wb-prop-soft-light, #eef2ff);
+
+  /* Borde de identidad: el color apenas asomando sobre el borde del tema.
+     Tiene que leerse como pertenencia, no como alarma; de ahí lo corto de la
+     mezcla. Se declara JUNTO a las anteriores y no en `:root` a secas porque
+     un `var()` dentro de una variable se sustituye en el elemento donde se
+     DECLARA: aquí es donde `--wb-prop` ya vale el color de esta propiedad. */
+  --wb-prop-border: color-mix(in oklab, var(--wb-prop) 32%, var(--border));
+
+  /* Fondo de la barra fija: el tinte suave rebajado contra el fondo del tema
+     y dejado translúcido, para que el calendario se intuya al pasar por
+     debajo del `backdrop-blur`. */
+  --wb-prop-bar: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--wb-prop-soft) 62%, var(--background)) 90%,
+    transparent
+  );
+}
+
+.dark,
+.dark [data-wb-prop] {
+  --wb-prop: var(--wb-prop-dark, #a5b4fc);
+  --wb-prop-soft: var(--wb-prop-soft-dark, #1e1b4b);
+
+  /* En oscuro el borde del tema casi no existe y el acento es claro: el
+     tinte necesita más peso para leerse sin llegar a encender la tarjeta.
+     `--wb-prop-bar` no se repite: su `var(--wb-prop-soft)` toma el valor
+     que gana en este elemento, que ya es el oscuro. */
+  --wb-prop-border: color-mix(in oklab, var(--wb-prop) 45%, var(--border));
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
 }

@@ -1,0 +1,28 @@
+[Unit]
+Description=Wellbros (aplicacion web Next.js)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=wellbros
+Group=wellbros
+WorkingDirectory=/srv/wellbros/app
+EnvironmentFile=/srv/wellbros/shared/.env
+# Escucha SOLO en loopback: nginx es el unico que la expone.
+ExecStart=/usr/bin/node node_modules/.bin/next start -p 3000 -H 127.0.0.1
+Restart=always
+RestartSec=5
+
+# Endurecimiento del proceso
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/srv/wellbros
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

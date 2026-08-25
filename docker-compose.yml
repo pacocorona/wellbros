@@ -1,0 +1,25 @@
+# Postgres para desarrollo local.
+#   docker compose up -d
+# En producción (Debian 13) la base corre nativa en el host: ver docs.
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: wellbros-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wellbros
+      POSTGRES_PASSWORD: wellbros_dev
+      POSTGRES_DB: wellbros
+    ports:
+      # 5432 lo ocupa otro proyecto en esta máquina; Wellbros usa 5434.
+      - "5434:5432"
+    volumes:
+      - wellbros-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wellbros -d wellbros"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  wellbros-pgdata:
