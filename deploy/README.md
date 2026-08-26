@@ -489,13 +489,15 @@ install -m 750 -o wellbros -g wellbros /srv/wellbros/app/deploy/bin/run-app.sh /
 install -m 750 -o wellbros -g wellbros /srv/wellbros/app/deploy/bin/run-worker.sh /srv/wellbros/bin/
 ```
 
-Los dos  son los lanzadores que ejecuta systemd. Existen porque
-systemd **no expande variables en la posición del ejecutable** de :
-un  falla con . El lanzador sí
-lee  y  del entorno, que es lo que permite usar un Node
-propio sin tocar el del sistema.
+Los dos `run-*.sh` son los lanzadores que ejecuta systemd. Existen porque
+systemd **no expande variables en la posición del ejecutable** de `ExecStart`:
+un `ExecStart=${WELLBROS_NODE} …` falla con `status=203/EXEC`, porque intenta
+ejecutar un programa que se llama, literalmente, `${WELLBROS_NODE}`. En los
+argumentos sí funcionan; en el binario, no. El lanzador sí lee `WELLBROS_NODE`
+y `PORT` del entorno, que es lo que permite usar un Node propio sin tocar el
+del sistema —del que dependen las demás aplicaciones de la máquina.
 
- reinicia los dos servicios, y para eso el usuario `wellbros`
+`deploy.sh` reinicia los dos servicios, y para eso el usuario `wellbros`
 necesita permiso — que **hoy no existe en ninguna parte**. Sin esta entrada, el
 despliegue llega hasta el final y falla justo en el reinicio:
 
