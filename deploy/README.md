@@ -649,12 +649,42 @@ certbot renew --dry-run
 > HSTS queda **desactivado a propósito**. La línea está comentada en
 > `wellbros.conf` con la explicación de cuándo activarla (§14).
 
-> **A partir de aquí, `/etc/nginx/sites-available/wellbros.conf` ya NO es igual
-> al del repositorio**: certbot le añadió el bloque 443 y la redirección.
-> `deploy.sh` no toca nginx, así que los despliegues no lo pisan. Pero si algún
-> día vuelves a copiar el archivo desde el repositorio, **borrarás lo que
-> escribió certbot** y el sitio se quedará sin HTTPS. En ese caso, revisa el
-> archivo a mano y vuelve a ejecutar el mismo `certbot --nginx …` de arriba.
+### Actualizar la configuración de nginx más adelante
+
+**Léelo antes de volver a copiar el archivo. Esto ya rompió el sitio una vez.**
+
+Desde que certbot corre, `/etc/nginx/sites-available/wellbros.conf` **ya no es
+igual al del repositorio**: certbot le añadió el bloque `listen 443`, las rutas
+del certificado y la redirección desde el 80.
+
+Copiar el archivo del repositorio encima **borra todo eso**. Y el fallo es
+traicionero, porque `nginx -t` sigue diciendo que la configuración es válida —
+lo es: simplemente ya no hay ningún bloque que atienda el 443 para tu dominio.
+Las peticiones HTTPS caen entonces en el sitio por defecto del servidor, así que
+**en tu dominio aparece otra web**, no un error. Nadie sospecha de nginx viendo
+eso.
+
+`deploy.sh` no toca nginx, así que los despliegues rutinarios no lo pisan. El
+riesgo aparece solo cuando actualizas la configuración a mano. Cuando lo hagas,
+son **tres comandos y ninguno es opcional**:
+
+```bash
+cp /srv/wellbros/app/deploy/nginx/wellbros.conf /etc/nginx/sites-available/wellbros.conf
+sed -i 's|127.0.0.1:3000|127.0.0.1:PUERTO_REAL|' /etc/nginx/sites-available/wellbros.conf
+certbot install --cert-name wellbrosproperties.lat --nginx --redirect
+nginx -t && systemctl reload nginx
+```
+
+`certbot install` es el que devuelve el bloque 443. **No emite ni renueva ningún
+certificado**: toma el que ya existe y lo reinstala en la configuración. Por eso
+se usa este y no `certbot --nginx …`, que además de preguntar puede acabar
+gastando uno de los cinco intentos semanales que permite Let's Encrypt.
+
+Comprobación, que aquí sí importa —`nginx -t` no la sustituye:
+
+```bash
+curl -sI https://wellbrosproperties.lat/login | head -n 1     # HTTP/2 200
+```
 
 ---
 
