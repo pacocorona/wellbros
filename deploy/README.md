@@ -565,23 +565,40 @@ falta o no coincide con la orden.
 
 ### Comprobar que las variables llegaron enteras
 
+**No sirve `systemctl show -p Environment`**: esa propiedad muestra únicamente
+lo declarado con `Environment=` en la unidad, y **no** lo que viene del
+`EnvironmentFile=`. Con nuestras unidades responde `WELLBROS_NODE=/usr/bin/node`
+—el valor por defecto— aunque el proceso esté corriendo con otro. Es
+desconcertante y hace pensar que el `.env` no se está leyendo.
+
+Lo que hay que mirar es el entorno REAL del proceso vivo:
+
 ```bash
-systemctl show wellbros-worker -p Environment
+PID=$(systemctl show wellbros-worker -p MainPID --value)
+tr '\0' '\n' < /proc/$PID/environ | grep -E '^(EMAIL_DRIVER|PORT|WELLBROS_NODE|APP_BASE_URL)='
 ```
 
-Qué mirar en esa salida:
+Esas cuatro variables son las que importan y **ninguna contiene secretos**, así
+que la salida se puede compartir sin riesgo. Qué comprobar:
 
-- `EMAIL_DRIVER=resend`, **exactamente eso**. Si ves `resend # console|resend`
-  o cualquier cosa después de la palabra, tienes el problema de §5.2: no saldrá
-  ningún correo y la cola dirá que todo se envió.
-- `RESEND_FROM=Wellbros <notificaciones@wellbrosproperties.lat>`, **sin comillas
-  alrededor** (systemd las quita al leer el archivo; si las ves, sobran en el
-  `.env`).
-- `DATABASE_URL` apuntando a `localhost:5432` (el **5434** es el de desarrollo:
-  si aparece, la aplicación no encontrará ninguna base).
+- `EMAIL_DRIVER=resend`, **exactamente eso**. Si aparece
+  `resend # console|resend` o cualquier cosa después de la palabra, tienes el
+  problema de §5.2: no saldrá ningún correo y la cola dirá que todo se envió.
+- `PORT` con el puerto que pusiste, y `WELLBROS_NODE` con el Node que quieres
+  usar. Si `WELLBROS_NODE` dice `/usr/bin/node` y esperabas otro, ahí sí no se
+  está leyendo el `.env`.
+- `APP_BASE_URL` sin nada detrás del dominio.
 
-> Esa salida imprime **la clave de Resend y la contraseña de la base en claro**.
-> No la pegues en un correo, un chat ni un ticket.
+Para ver el resto —incluida `DATABASE_URL`, que debe apuntar a `localhost:5432`
+y no al **5434** de desarrollo— quita el `grep`. Pero ojo: **entonces la salida
+incluye la clave de Resend y la contraseña de la base en claro**. No la pegues
+en un correo, un chat ni un ticket.
+
+Otra forma de confirmar qué archivo lee la unidad, sin volcar nada:
+
+```bash
+systemctl show wellbros-worker -p EnvironmentFiles
+```
 
 ---
 
@@ -807,7 +824,7 @@ envíos debe conservarse.
 | Síntoma | Causa casi segura |
 | --- | --- |
 | La fila se queda en `PENDING` | El worker no está corriendo: `systemctl status wellbros-worker`. |
-| `status = SENT` pero no llega nada, ni aparece en el panel de Resend | `EMAIL_DRIVER` no vale exactamente `resend` (§5.2). Compruébalo con `systemctl show wellbros-worker -p Environment` y mira si hay archivos en `/srv/wellbros/app/.tmp/emails/`: si los hay, está usando el adaptador de consola. |
+| `status = SENT` pero no llega nada, ni aparece en el panel de Resend | `EMAIL_DRIVER` no vale exactamente `resend` (§5.2). Compruébalo leyendo el entorno real del proceso (§7, no vale `systemctl show -p Environment`) y mira si hay archivos en `/srv/wellbros/app/.tmp/emails/`: si los hay, está usando el adaptador de consola. |
 | `last_error` con `403` | El remitente no está verificado. `RESEND_FROM` tiene que ir en el dominio **raíz** (`@wellbrosproperties.lat`), que es el que está dado de alta. |
 | `last_error` con `422` | El `RESEND_FROM` está mal formado (comillas de más, `<` o `>` perdidos). |
 | `last_error` con `429` o `daily_quota_exceeded` | Límite del plan gratuito (100 correos al día). El worker lo reintenta solo, con espera creciente. |
