@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<title>Wellbros — Manual de la administradora</title>
+<style>/* Manual de usuario de Wellbros — hoja de estilo para impresión.
+   Se renderiza con Chrome headless a A4. */
+
+@page {
+  size: A4;
+  margin: 20mm 18mm 18mm 18mm;
+}
+
+/* Portada sin márgenes: la banda de color llega al borde. */
+@page :first {
+  margin: 0;
+}
+
+:root {
+  --tinta:      #1D2A35;
+  --tinta-suave:#5B6B7A;
+  --acento:     #0E7490;
+  --acento-osc: #0B5E75;
+  --acento-sua: #E4F1F5;
+  --linea:      #DCE3E8;
+  --papel-sua:  #F6F8F9;
+  --aviso-fondo:#FDF3D8;
+  --aviso-borde:#B8860B;
+  --aviso-tinta:#6B4E06;
+  --ojo-fondo:  #EAF3EC;
+  --ojo-borde:  #2F7D4F;
+  --ojo-tinta:  #1E5233;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--tinta);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+h1, h2, h3, h4 {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: var(--tinta);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+/* ─────────────────────────────────────────────── portada */
+
+.portada {
+  height: 297mm;
+  padding: 40mm 24mm 24mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: linear-gradient(160deg, #0E7490 0%, #0B5E75 55%, #123C4C 100%);
+  color: #fff;
+  page-break-after: always;
+}
+.portada .marca {
+  font-family: Consolas, "SF Mono", Menlo, monospace;
+  font-size: 8.5pt; letter-spacing: .22em; text-transform: uppercase;
+  opacity: .8;
+}
+.portada h1 {
+  font-size: 40pt; font-weight: 800; color: #fff;
+  margin: 6mm 0 4mm; letter-spacing: -.02em;
+}
+.portada .bajada {
+  font-size: 13pt; max-width: 120mm; opacity: .95; line-height: 1.45;
+}
+.portada .pie {
+  font-family: Consolas, "SF Mono", Menlo, monospace;
+  font-size: 8.5pt; opacity: .75; line-height: 1.9;
+}
+.portada .franja {
+  display: flex; gap: 3mm; margin: 8mm 0 0;
+}
+.portada .franja span {
+  flex: 1; height: 3mm; border-radius: 1.5mm; background: rgba(255,255,255,.28);
+}
+.portada .franja span:nth-child(-n+3) { background: rgba(255,255,255,.75); }
+
+/* ─────────────────────────────────────────────── índice */
+
+.indice { page-break-after: always; }
+.indice h2 { font-size: 18pt; margin: 0 0 6mm; }
+.indice ol { list-style: none; padding: 0; margin: 0; counter-reset: sec; }
+.indice > ol > li {
+  counter-increment: sec;
+  padding: 2.2mm 0;
+  border-bottom: 1px solid var(--linea);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 11pt; font-weight: 600;
+  display: flex; gap: 4mm; align-items: baseline;
+}
+.indice > ol > li::before {
+  content: counter(sec, decimal-leading-zero);
+  font-family: Consolas, "SF Mono", Menlo, monospace;
+  font-size: 8.5pt; font-weight: 400; color: var(--acento);
+}
+.indice .sub {
+  font-family: Georgia, serif;
+  font-size: 9.5pt; font-weight: 400; color: var(--tinta-suave);
+  display: block; margin-top: .8mm;
+}
+
+/* ─────────────────────────────────────────────── secciones */
+
+section { page-break-before: always; }
+section:first-of-type { page-break-before: auto; }
+
+h2 {
+  font-size: 17pt; font-weight: 800;
+  margin: 0 0 4mm; padding-bottom: 2.5mm;
+  border-bottom: 2.5pt solid var(--acento);
+}
+h3 {
+  font-size: 12pt; font-weight: 700; color: var(--acento-osc);
+  margin: 7mm 0 2mm;
+  page-break-after: avoid;
+}
+h4 {
+  font-size: 10.5pt; font-weight: 700;
+  margin: 5mm 0 1.5mm;
+  page-break-after: avoid;
+}
+
+p { margin: 0 0 3mm; }
+strong { font-weight: 700; }
+em { font-style: italic; }
+
+ul, ol { margin: 0 0 3.5mm; padding-left: 6mm; }
+li { margin: 0 0 1.6mm; }
+li > ul, li > ol { margin-top: 1.6mm; }
+
+/* Pasos numerados: se ven como pasos, no como una lista cualquiera. */
+ol { counter-reset: paso; list-style: none; padding-left: 0; }
+ol > li {
+  counter-increment: paso;
+  position: relative;
+  padding-left: 8mm;
+  margin-bottom: 2.5mm;
+}
+ol > li::before {
+  content: counter(paso);
+  position: absolute; left: 0; top: 0;
+  width: 5.2mm; height: 5.2mm;
+  background: var(--acento); color: #fff;
+  border-radius: 50%;
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 7.5pt; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+ul { list-style: none; padding-left: 5mm; }
+ul > li { position: relative; padding-left: 3.5mm; }
+ul > li::before {
+  content: ""; position: absolute; left: 0; top: 1.9mm;
+  width: 1.4mm; height: 1.4mm; border-radius: 50%;
+  background: var(--acento);
+}
+
+/* ─────────────────────────────────────────────── tablas */
+
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 3mm 0 4mm; font-size: 9.5pt;
+  page-break-inside: avoid;
+}
+th {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 8.5pt; font-weight: 700; text-align: left;
+  background: var(--acento-sua); color: var(--acento-osc);
+  padding: 2mm 2.5mm; border-bottom: 1.5pt solid var(--acento);
+}
+td { padding: 2mm 2.5mm; border-bottom: .5pt solid var(--linea); vertical-align: top; }
+tr:nth-child(even) td { background: var(--papel-sua); }
+
+/* ─────────────────────────────────────────────── avisos */
+
+.aviso, .ojo, .tip, .pantalla {
+  margin: 4mm 0; padding: 3mm 4mm;
+  border-left: 3pt solid;
+  border-radius: 0 2mm 2mm 0;
+  page-break-inside: avoid;
+  font-size: 10pt;
+}
+.aviso { background: var(--aviso-fondo); border-color: var(--aviso-borde); color: var(--aviso-tinta); }
+.ojo   { background: var(--ojo-fondo);   border-color: var(--ojo-borde);   color: var(--ojo-tinta); }
+.tip   { background: var(--acento-sua);  border-color: var(--acento);      color: var(--acento-osc); }
+
+/* Mensaje literal de la aplicación. Va en cursiva y con rótulo propio para que
+   se lea como una pantalla citada y no como una afirmación del manual. */
+.pantalla {
+  background: #F1F4F6; border-color: var(--tinta-suave); color: var(--tinta);
+  font-style: italic;
+}
+.pantalla .t {
+  font-style: normal; color: var(--tinta-suave);
+  font-size: 8pt; letter-spacing: .08em; text-transform: uppercase;
+}
+
+.aviso p:last-child, .ojo p:last-child, .tip p:last-child,
+.pantalla p:last-child { margin-bottom: 0; }
+
+.aviso .t, .ojo .t, .tip .t, .pantalla .t {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700; font-size: 9.5pt;
+  display: block; margin-bottom: 1mm;
+}
+
+/* Nombre literal de un botón o campo de la pantalla. */
+.btn {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700; font-size: 9pt;
+  background: var(--papel-sua); border: .5pt solid var(--linea);
+  border-radius: 1.5mm; padding: .3mm 1.4mm;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────── figuras */
+
+figure { margin: 4mm 0; page-break-inside: avoid; }
+figure svg { display: block; width: 100%; height: auto; }
+figcaption {
+  font-size: 8.5pt; color: var(--tinta-suave);
+  margin-top: 1.5mm; font-style: italic;
+}
+
+/* Muestra de color de estado, en línea con el texto. */
+.chip {
+  display: inline-block; width: 3mm; height: 3mm;
+  border-radius: .8mm; vertical-align: middle;
+  margin-right: 1mm; border: .4pt solid rgba(0,0,0,.2);
+}
+
+hr { border: none; border-top: .5pt solid var(--linea); margin: 6mm 0; }
+
+/* Evita que un encabezado quede solo al final de una página. */
+h2, h3, h4 { break-after: avoid-page; }
+table, figure, .aviso, .ojo, .tip { break-inside: avoid-page; }
+</style>
+</head><body>
+
+<div class="portada">
+  <div>
+    <p class="marca">Manual de la administradora</p>
+    <h1>Wellbros</h1>
+    <p class="bajada">Cómo administrar las semanas de las propiedades compartidas:
+      abrir fechas, dar de alta a los copropietarios, resolver una cancelación
+      y saber siempre qué pasó y quién lo hizo.</p>
+    <div class="franja"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <div class="pie">
+    Preparado para Ivonne Buenfil<br>
+    wellbrosproperties.lat<br>
+    26 de agosto de 2026
+  </div>
+</div>
+
+<div class="indice">
+  <h2>Lo que encontrarás aquí</h2>
+  <p>Puedes leerlo de corrido la primera vez, o ir directo al capítulo que
+     necesites. Si acabas de recibir tu cuenta, empieza por el primero: al final
+     te dice en qué orden hacer las cosas para no tener que volver atrás.</p>
+  <ol><li>Tu primer día<span class="sub">Entrar, cambiar la contraseña, conocer el menú y saber por dónde empezar.</span></li>
+<li>Las propiedades y sus semanas<span class="sub">Dar de alta las casas y abrir las semanas que se podrán reservar.</span></li>
+<li>Cómo se lee el calendario<span class="sub">Los estados, la banda partida en dos tramos y la regla de los 15 días.</span></li>
+<li>Reservar, cancelar, ceder y anotar<span class="sub">Todo lo que se hace tocando una semana del calendario.</span></li>
+<li>Copropietarios, bitácora y correos<span class="sub">Las cuentas, el registro de lo que pasa y qué avisos salen por correo.</span></li></ol>
+</div>
+
+<section><h2>Tu primer día</h2>
+<h3>1. La primera vez que entras</h3>
+<p>Wellbros vive en una dirección web. Ábrela en el navegador de tu computadora o de tu teléfono (te conviene guardarla en favoritos, porque no hay otra forma de llegar).</p>
+<p>Verás una pantalla con el título <strong>Wellbros</strong> y, debajo, <em>Reserva de semanas en las propiedades compartidas</em>. Te pide dos cosas:</p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Qué escribes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Correo</strong></td>
+<td>Tu dirección de correo, la que quedó registrada en tu cuenta.</td>
+</tr>
+<tr>
+<td><strong>Contraseña</strong></td>
+<td>La contraseña inicial que te entregaron por separado.</td>
+</tr>
+</tbody></table>
+<p>Toca <span class="btn">Entrar</span>. Mientras carga, el botón dice <strong>Entrando…</strong></p>
+<p>Un par de cosas que conviene saber de esta pantalla:</p>
+<ul>
+<li><strong>No hay registro.</strong> Abajo lo dice: <em>¿Sin acceso? La administración crea las cuentas</em>. Nadie se da de alta solo; las cuentas las creas tú desde Configuración.</li>
+<li><strong>Si te equivocas, el mensaje siempre es el mismo</strong>: <em>No pudimos iniciar sesión con esos datos. Revísalos e inténtalo de nuevo.</em> No te dirá si falló el correo o la contraseña, y es a propósito: si dijera &quot;ese correo no existe&quot;, cualquiera podría ir probando correos hasta averiguar quién tiene cuenta aquí. Revisa los dos campos con calma.</li>
+<li>Ojo con los reintentos: si fallas muchas veces seguidas, el acceso se bloquea un rato y el mensaje que verás será exactamente ese mismo. Espera unos minutos antes de volver a probar.</li>
+</ul>
+<h3>2. La aplicación te va a exigir cambiar la contraseña</h3>
+<p>En cuanto entres por primera vez, no vas a llegar al calendario. Vas a caer en una pantalla titulada <strong>Cambia tu contraseña</strong>, y de ahí no se sale hasta que la cambies. No es un trámite: la contraseña con la que acabas de entrar te la dictó otra persona, así que ahora mismo no eres la única que la conoce. La propia pantalla te lo dice con esas palabras.</p>
+<p>Te pide tres cosas, en este orden:</p>
+<ol>
+<li><strong>La contraseña con la que acabas de entrar</strong> — la temporal, la que te dieron.</li>
+<li><strong>Tu contraseña nueva</strong>.</li>
+<li><strong>Repite la contraseña nueva</strong> — la misma otra vez, para descartar un dedazo.</li>
+</ol>
+<p>Las reglas de la contraseña nueva están escritas arriba del formulario, y son solo dos:</p>
+<ul>
+<li>Debe tener <strong>12 caracteres o más</strong>.</li>
+<li>Debe ser <strong>distinta de la que estás usando</strong>.</li>
+</ul>
+<p>No se piden mayúsculas ni símbolos. El consejo que da la propia pantalla es bueno: una frase larga que recuerdes —«mi perro duerme en el sillón»— protege más que <code>Verano2026!</code>.</p>
+<p>Toca <span class="btn">Cambiar contraseña y entrar</span>. Mientras trabaja dirá <strong>Cambiando…</strong> Al terminar te deja directamente en el calendario, con un aviso arriba que dice <strong>Contraseña cambiada</strong> — <em>Ya es solo tuya: nadie más la conoce.</em></p>
+<p>Si algo no cuadra, el mensaje aparece debajo del campo que falla:</p>
+<table>
+<thead>
+<tr>
+<th>Lo que verás</th>
+<th>Qué pasó</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em>La contraseña actual no es correcta</em></td>
+<td>La temporal que escribiste arriba no coincide.</td>
+</tr>
+<tr>
+<td><em>Necesita al menos 12 caracteres</em></td>
+<td>La nueva se quedó corta.</td>
+</tr>
+<tr>
+<td><em>Las dos contraseñas no coinciden</em></td>
+<td>El campo de repetir no es igual al de arriba.</td>
+</tr>
+<tr>
+<td><em>La contraseña nueva debe ser distinta de la actual</em></td>
+<td>Pusiste la misma que ya tenías.</td>
+</tr>
+</tbody></table>
+<p>En esta pantalla solo hay una salida alternativa: el botón <strong>Cerrar sesión</strong>, abajo. Úsalo únicamente si te diste cuenta de que entraste con la cuenta equivocada o de que esa no es tu computadora. No sirve para saltarte el cambio: al volver a entrar caerás aquí otra vez. Al pie te recuerda con qué correo entraste.</p>
+<h3>3. El menú: qué hay en cada sitio</h3>
+<p>Ya dentro, arriba de todo verás la palabra <strong>Wellbros</strong> (tócala y vuelves al calendario) y, a su derecha, el menú. En el teléfono el menú <strong>no está arriba: está abajo</strong>, fijo, en una barra con iconos, para que lo alcances con el pulgar. Los destinos son exactamente los mismos.</p>
+<table>
+<thead>
+<tr>
+<th>Dónde</th>
+<th>Para qué sirve</th>
+<th>¿Quién lo ve?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Calendario</strong></td>
+<td>La pantalla principal. El mes de una propiedad, con sus semanas y quién tiene cada una. Es lo primero que se ve al entrar.</td>
+<td>Todos</td>
+</tr>
+<tr>
+<td><strong>Configuración</strong></td>
+<td>Donde das de alta propiedades, abres semanas y creas las cuentas de los copropietarios.</td>
+<td><strong>Solo tú</strong></td>
+</tr>
+<tr>
+<td><strong>Bitácora</strong></td>
+<td>El registro de todo lo que ha pasado en Wellbros, de lo más reciente a lo más antiguo. Nada de ahí se puede editar ni borrar.</td>
+<td><strong>Solo tú</strong></td>
+</tr>
+<tr>
+<td><strong>Perfil</strong></td>
+<td>Tus datos, tu contraseña y cómo se ve Wellbros para ti.</td>
+<td>Todos</td>
+</tr>
+</tbody></table>
+<p><strong>Configuración</strong> y <strong>Bitácora</strong> son tuyas por ser la administradora. Los copropietarios ni siquiera ven esos dos botones en su menú: para ellos el menú tiene solo <strong>Calendario</strong> y <strong>Perfil</strong>.</p>
+<p>Dentro de <strong>Configuración</strong> hay dos pestañas, y vas a usarlas mucho:</p>
+<ul>
+<li><strong>Usuarios</strong> — las cuentas de los copropietarios.</li>
+<li><strong>Propiedades y semanas</strong> — las propiedades y las semanas que abres para reservar.</li>
+</ul>
+<p>A la derecha de la barra de arriba está tu nombre, el selector de tema y un botón con una flechita saliendo de una puerta: es <strong>Cerrar sesión</strong>. Si dejas el puntero encima te lo confirma.</p>
+<h3>4. Claro u oscuro, como prefieras</h3>
+<p>En la barra de arriba, junto a tu nombre, hay un botón redondo con un sol (o una luna, según cómo lo tengas ahora). Se llama <strong>Cambiar tema</strong>. Tócalo y se despliegan tres opciones:</p>
+<ul>
+<li><strong>Claro</strong></li>
+<li><strong>Oscuro</strong></li>
+<li><strong>Sistema</strong></li>
+</ul>
+<p><strong>Sistema</strong> sigue lo que tenga configurado tu teléfono o computadora, incluido el cambio automático de noche. Es una buena opción si no quieres pensarlo.</p>
+<p>Lo mismo lo tienes, más a la vista, en <strong>Perfil</strong>, en el bloque <strong>Apariencia</strong>: tres botones grandes con los mismos tres nombres, y el activo lleva una palomita. Se guarda en tu cuenta, así que te sigue a cualquier navegador donde entres.</p>
+<p>Ese mismo botón de tema también está en la pantalla de acceso, arriba a la derecha, por si quieres cambiarlo antes de entrar.</p>
+<h3>5. Cambiar tu contraseña cuando quieras</h3>
+<p>No hace falta esperar a que nadie te la reinicie. Entra a <strong>Perfil</strong> desde el menú. Verás tres bloques; el de en medio se llama <strong>Contraseña</strong> y arriba te avisa de lo importante: <em>Cambiarla cierra tu sesión en los demás dispositivos. Esta ventana sigue abierta.</em></p>
+<ol>
+<li>Escribe tu <strong>Contraseña actual</strong>.</li>
+<li>Escribe tu <strong>Contraseña nueva</strong> (mismas dos reglas de siempre: 12 caracteres o más y distinta de la actual).</li>
+<li><strong>Repite la contraseña nueva</strong>.</li>
+<li>Toca <span class="btn">Cambiar contraseña</span>. Mientras trabaja dirá <strong>Cambiando…</strong></li>
+</ol>
+<p>Al terminar te confirma cuántas sesiones cerró en otros aparatos: <em>Contraseña cambiada. Cerramos 2 sesiones abiertas en otros dispositivos; esta sigue activa.</em> Si no había ninguna, dirá <em>Contraseña cambiada. No había sesiones abiertas en otros dispositivos.</em></p>
+<p>Eso significa que si habías entrado desde el teléfono, la tableta o la computadora de la oficina, esos aparatos quedan fuera y tendrán que volver a entrar con la contraseña nueva. La ventana donde estás ahora no se cierra. Es justo lo que quieres si sospechas que alguien vio tu contraseña.</p>
+<p>En ese mismo <strong>Perfil</strong> también puedes cambiar tu <strong>Nombre completo</strong> —es lo que ven los demás en el calendario y en los avisos— y tu <strong>Teléfono</strong>, que es opcional y hoy no se usa para nada: queda guardado para cuando se activen los avisos por WhatsApp. Si lo pones, escríbelo en formato internacional con el código de país, así: <code>+5219981234567</code>.</p>
+<p>El <strong>Correo</strong> aparece en gris y no se puede escribir en él: es la identidad de la cuenta. Para cambiar el de alguien tienes que ir a <strong>Configuración › Usuarios</strong>.</p>
+<p>Cada bloque de Perfil se guarda por su cuenta. Si cambias el nombre, toca <span class="btn">Guardar cambios</span> de ese bloque; la contraseña tiene su propio botón. Un error tecleando la contraseña no tira el cambio de nombre que ya estaba bien.</p>
+<h3>6. El orden correcto para empezar</h3>
+<p>Esto es lo más importante de este capítulo. Una plataforma vacía no sirve de nada, y hacer las cosas al revés te va a costar volver atrás. <strong>Hazlo en este orden:</strong></p>
+<ol>
+<li><strong>Primero, da de alta las propiedades.</strong> Ve a <strong>Configuración › Propiedades y semanas</strong> y crea cada propiedad, con su nombre y su color. Si entras al calendario antes de esto, lo único que verás es un cartel que dice <strong>Todavía no hay propiedades</strong> — <em>Da de alta una propiedad en Configuración y abre sus primeras semanas.</em></li>
+<li><strong>Después, abre semanas en cada propiedad.</strong> También desde <strong>Configuración › Propiedades y semanas</strong>, eligiendo la propiedad y el mes. Una semana que no has abierto no existe para nadie: no se puede reservar.</li>
+<li><strong>Al final, crea las cuentas de los copropietarios.</strong> En <strong>Configuración › Usuarios</strong>. A cada uno le pones una contraseña temporal y se la entregas por fuera; la primera vez que entre, la aplicación le exigirá cambiarla igual que te la exigió a ti.</li>
+</ol>
+<p><strong>Por qué ese orden y no otro:</strong> sin propiedades no hay dónde abrir semanas, así que el paso 2 no es posible antes del 1. Y si creas a los copropietarios antes de abrir semanas, entrarán a un calendario vacío, no podrán reservar nada y lo primero que harán será escribirte para preguntar qué pasa.</p>
+<p>Cada uno de esos tres pasos tiene su propio capítulo en este manual:</p>
+<ul>
+<li>Crear propiedades y elegir su color → <strong>Propiedades</strong></li>
+<li>Abrir semanas para reservar → <strong>Semanas y calendario</strong></li>
+<li>Dar de alta a los copropietarios → <strong>Usuarios</strong></li>
+</ul>
+</section>
+<section><h2>Las propiedades y sus semanas</h2>
+<p>Aquí vive casi todo tu trabajo de administración: das de alta las casas y decides qué semanas quedan disponibles para que los copropietarios reserven.</p>
+<p>Entras desde <strong>Configuración</strong>, en el menú de la izquierda. Arriba verás dos pestañas: <strong>Usuarios</strong> y <strong>Propiedades y semanas</strong>. Toca <span class="btn">Propiedades y semanas</span>.</p>
+<p>La pantalla tiene tres bloques, de arriba abajo:</p>
+<table>
+<thead>
+<tr>
+<th>Bloque</th>
+<th>Para qué</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Propiedades</strong></td>
+<td>Crear, editar, desactivar y reactivar las casas.</td>
+</tr>
+<tr>
+<td><strong>Gestor de semanas</strong></td>
+<td>Abrir, cerrar y reabrir semanas. Es lo que más vas a usar.</td>
+</tr>
+<tr>
+<td><strong>Notas de mantenimiento</strong></td>
+<td>Avisos que ve todo el mundo en el calendario.</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>Crear una propiedad</h3>
+<ol>
+<li>En el bloque <strong>Propiedades</strong>, toca <span class="btn">Nueva propiedad</span> (arriba a la derecha).</li>
+<li>Se abre una ventana con dos cosas que llenar: <strong>Nombre</strong> y <strong>Color</strong>.</li>
+<li>Escribe el <strong>Nombre</strong>. El ejemplo que verás escrito en gris es <em>Casa del lago</em>.</li>
+<li>Toca <span class="btn">Crear</span>.</li>
+</ol>
+<p>Si te arrepientes antes de terminar, toca <span class="btn">Cancelar</span>.</p>
+<p><strong>El nombre importa mucho.</strong> Es el que todos los copropietarios van a ver en el selector de propiedad que está arriba del calendario, y también el que sale en los correos. Ponle un nombre que cualquiera reconozca de golpe: <em>Casa del lago</em>, <em>Depto Cancún</em>. Nada de claves internas ni abreviaturas tuyas.</p>
+<p>Reglas del nombre:</p>
+<ul>
+<li>Mínimo 3 letras, máximo 80.</li>
+<li>No puede repetirse. Si ya existe una casa con ese nombre, aunque la hayas escrito con distintas mayúsculas, te dirá: <em>Ya hay una propiedad llamada «...»</em>. Cambia el nombre y vuelve a intentar.</li>
+</ul>
+<p>Cuando todavía no hay ninguna casa dada de alta, la pantalla te lo dice así: <em>Todavía no hay propiedades. Crea la primera para poder abrir semanas.</em></p>
+<hr>
+<h3>El color de la propiedad</h3>
+<p>Cada casa tiene un color propio. No es adorno: cuando alguien cambia de propiedad en el calendario, el marco entero cambia de color. Eso es lo que evita que un copropietario reserve una semana creyendo que está en una casa cuando en realidad está en otra.</p>
+<p>Hay ocho colores para elegir, y siempre se ven así de escritos:</p>
+<p><strong>Índigo · Turquesa · Ámbar · Rosa · Esmeralda · Cielo · Violeta · Naranja</strong></p>
+<p>Cómo funciona el selector:</p>
+<ul>
+<li>En la ventana de <strong>Nueva propiedad</strong> el sistema ya te llega con un color marcado: el primer color que no esté usando ninguna otra casa activa. Si no quieres pensarlo, déjalo así y ya está.</li>
+<li>Si prefieres elegir tú, toca la muestra del color que quieras. El que está elegido lleva una palomita.</li>
+<li>Si eliges un color que ya usa otra casa, aparece abajo un avisito discreto: <em>«Casa del lago» ya usa Turquesa. Puedes dejarlo, pero dos propiedades del mismo color se distinguen peor en el calendario.</em> <strong>No te lo impide.</strong> Puedes dejarlo si de verdad lo quieres, pero es mejor cambiarlo.</li>
+<li>Los colores de las semanas dentro del calendario —libre, tuya, de otra persona— <strong>no cambian nunca</strong>. El color de la propiedad solo tiñe el marco. Así nadie pierde la señal que le dice si puede reservar o no.</li>
+</ul>
+<p>No puedes inventar un color propio. Son esos ocho y punto: están medidos para que se lean bien también en pantalla oscura.</p>
+<hr>
+<h3>Editar una propiedad</h3>
+<p>En la tarjeta de la casa, toca <span class="btn">Editar</span>. Se abre la misma ventana, ahora con el título <strong>Editar propiedad</strong>. Puedes cambiar el <strong>Nombre</strong>, el <strong>Color</strong>, o los dos. Termina con <strong>Guardar</strong>.</p>
+<p>Cambiar el nombre no rompe nada: las semanas y las reservas siguen igual, solo cambia cómo se llama la casa en pantalla y en los correos siguientes.</p>
+<h3>Desactivar (y reactivar) una propiedad</h3>
+<p><strong>Las propiedades no se borran nunca. Se desactivan.</strong> Su historia —semanas, reservas, notas— se conserva completa.</p>
+<ol>
+<li>En la tarjeta de la casa, toca <span class="btn">Desactivar</span>.</li>
+<li>Se abre la ventana <strong>Desactivar propiedad</strong>, que te dice: <em>«Casa del lago» dejará de aparecer en el calendario y no se le podrán abrir semanas.</em></li>
+<li>Si esa casa tiene cosas vivas, verás además un recuadro de aviso con el título <strong>Queda cosa viva en esta propiedad</strong>, y debajo la cuenta exacta: cuántas <em>semanas abiertas que aún no terminan</em> y cuántas <em>semanas reservadas por alguien</em>.</li>
+<li>Toca <span class="btn">Desactivar</span> para confirmar, o <strong>Cancelar</strong> para dejarlo como estaba.</li>
+</ol>
+<p><strong>Qué pasa al desactivar:</strong> la casa desaparece del calendario de todos y ya no le puedes abrir semanas nuevas.</p>
+<p><strong>Qué NO pasa:</strong> no se borra nada y <strong>no se cancela nada</strong>. Las reservas que ya tenía la gente siguen ahí, escondidas. Como dice el propio aviso: <em>Desactivar no cancela nada: solo esconde la propiedad. Si quieres liberar esas semanas, ciérralas o cancela las reservas antes.</em></p>
+<p>Una casa desactivada lleva una etiqueta roja <strong>Desactivada</strong> junto a su nombre en la lista, y su botón cambia a <strong>Reactivar</strong>. Al reactivarla vuelve a aparecer en el calendario tal como estaba.</p>
+<h3>Lo que te dice cada tarjeta de un vistazo</h3>
+<p>Debajo del nombre de cada casa hay una línea gris con el resumen: el nombre del color, luego cuántas <strong>semanas abiertas por venir</strong> tiene, y si las hay, cuántas <strong>con reserva</strong>. Por ejemplo: <em>Turquesa · 12 semanas abiertas por venir · 4 con reserva</em>.</p>
+<hr>
+<h3>Abrir semanas</h3>
+<p>Esto es lo que más vas a hacer. La unidad siempre es la semana completa: <strong>de viernes 00:00 a jueves 23:59</strong>. No se abren días sueltos.</p>
+<p><strong>Abrir una semana NO la reserva ni se la asigna a nadie.</strong> Solo la pone a disposición para que los copropietarios puedan tomarla. Quién se la queda lo deciden ellos, por orden de llegada.</p>
+<p>Baja al bloque <strong>Gestor de semanas</strong>.</p>
+<ol>
+<li>En el campo <strong>Propiedad</strong>, elige la casa. Si acabas de tocar <strong>Gestionar semanas</strong> desde la tarjeta de una casa, ya viene elegida.</li>
+<li>En <strong>Desde</strong>, pon la primera fecha del tramo que quieres abrir.</li>
+<li>En <strong>Hasta</strong>, pon la última.</li>
+<li>Lee el resumen que aparece debajo (te lo explico enseguida).</li>
+<li>Toca <span class="btn">Abrir semanas</span>.</li>
+</ol>
+<p><strong>Las fechas que pones no tienen que ser viernes.</strong> Pon el tramo que tengas en la cabeza —por ejemplo del 1 de septiembre al 31 de diciembre— y el sistema busca todos los viernes que caen dentro y abre esas semanas. Como dice la pantalla: <em>Se abren todos los viernes comprendidos en el rango.</em></p>
+<p><strong>El resumen antes de confirmar.</strong> En cuanto pones las dos fechas, justo debajo aparece qué va a pasar, y cambia solo mientras mueves las fechas:</p>
+<table>
+<thead>
+<tr>
+<th>Lo que lees</th>
+<th>Qué significa</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em>Elige las dos fechas para ver cuántas semanas se abrirían.</em></td>
+<td>Todavía te falta una fecha.</td>
+</tr>
+<tr>
+<td><em>Se abrirán 9 semanas, del 4 sep al 30 oct</em></td>
+<td>Todo bien. Esas son las que se van a abrir.</td>
+</tr>
+<tr>
+<td><em>…; 3 ya estaban abiertas</em></td>
+<td>Además de las nuevas, había 3 que ya existían. Se quedan como están.</td>
+</tr>
+<tr>
+<td><em>Los 5 viernes de ese rango ya están abiertos.</em></td>
+<td>No hay nada nuevo que abrir. El botón no se activa.</td>
+</tr>
+<tr>
+<td><em>No hay ningún viernes dentro de ese rango.</em></td>
+<td>El tramo es tan corto que no cae ningún viernes dentro.</td>
+</tr>
+<tr>
+<td><em>El rango termina antes de empezar.</em></td>
+<td>Pusiste <strong>Hasta</strong> antes que <strong>Desde</strong>.</td>
+</tr>
+<tr>
+<td><em>El rango cubre 210 semanas y el máximo por tanda es 104. Ábrelas en varios tramos.</em></td>
+<td>Te pasaste del tope.</td>
+</tr>
+</tbody></table>
+<p><strong>Sí hay un tope: 104 semanas por tanda</strong>, o sea unos dos años. No es capricho: es el seguro contra el dedo resbalado. Si tecleas mal el año, en vez de abrir siglos de calendario y mandar un correo con miles de líneas, te frena. Si de verdad necesitas más, hazlo en dos tandas.</p>
+<p><strong>Repetir no duplica nada.</strong> Puedes abrir el mismo tramo dos veces sin miedo. La pantalla te lo dice: <em>Repetir un rango no rompe nada: los que ya existen se dejan como están.</em> Los viernes que ya estaban abiertos se quedan exactamente igual, con su reserva si la tenían.</p>
+<p><strong>Qué pasa después de tocar el botón.</strong> Aparece un mensaje verde con el resultado, por ejemplo: <em>Se abrieron 9 semanas; 3 ya estaban abiertas. Avisos encolados: 7.</em> Ese último número son los correos que salen avisando a los copropietarios activos. <strong>Sale un solo correo por tanda</strong>, no uno por semana. Y las fechas <strong>Desde</strong> y <strong>Hasta</strong> se vacían solas, listas para la siguiente tanda.</p>
+<p>Si abriste sin querer y nadie ha reservado todavía, ciérralas y ya (más abajo).</p>
+<p><strong>Ojo con la regla de los 15 días.</strong> Que tú abras una semana no significa que se pueda reservar hoy mismo. Las semanas del mes siguiente solo se pueden reservar 15 días exactos antes de que empiece ese mes. Por eso el correo que reciben dice cuándo se podrán tomar, con esas palabras: <em>quince días antes de que empiece</em>. Puedes abrir el año entero de una vez sin problema; el sistema se encarga de ir liberándolas a su tiempo.</p>
+<p><strong>Si la casa está desactivada no puedes abrir semanas.</strong> Verás un aviso: <em>«Casa del lago» está desactivada: no se pueden abrir semanas hasta reactivarla, porque no aparece en el calendario de nadie.</em> Reactívala primero.</p>
+<hr>
+<h3>La lista de semanas</h3>
+<p>Debajo de <strong>Abrir semanas en lote</strong> está la lista, con el título <strong>Semanas de</strong> y el nombre de la casa. Va agrupada por mes y <strong>solo muestra las que aún no terminan</strong>. Si quieres ver las viejas, marca la casilla <strong>Mostrar semanas pasadas</strong> (trae entre paréntesis cuántas hay).</p>
+<p>Cada renglón trae la semana escrita completa —<em>viernes 2 al jueves 8 de octubre de 2026</em>— y debajo una etiqueta de color que te dice cómo está:</p>
+<table>
+<thead>
+<tr>
+<th>Etiqueta</th>
+<th>Qué quiere decir</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Abierta</strong></td>
+<td>Disponible. Nadie la ha tomado.</td>
+</tr>
+<tr>
+<td><strong>Reservada por Ana Buenfil</strong></td>
+<td>La tiene esa persona.</td>
+</tr>
+<tr>
+<td><strong>Cerrada</strong></td>
+<td>No se ofrece en el calendario.</td>
+</tr>
+<tr>
+<td><strong>Pasada, sin reservar</strong></td>
+<td>Ya terminó y nadie la usó.</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>Cerrar una semana</h3>
+<p>Cerrar una semana la saca del calendario: deja de ofrecerse y nadie puede tomarla. Se usa para fechas que quieres bloquear, o para deshacer una apertura que hiciste por error.</p>
+<p>En el renglón de la semana, toca <span class="btn">Cerrar</span>.</p>
+<p><strong>Si la semana NO tiene reserva</strong>, se cierra al instante, sin preguntar nada. Verás: <em>Semana cerrada: viernes 2 al jueves 8 de octubre de 2026. Ya no se ofrece en el calendario.</em> Nadie recibe correo, porque no había a quién avisar.</p>
+<p><strong>Si la semana SÍ tiene reserva</strong>, es otra cosa. Se abre la ventana <strong>Cerrar una semana reservada</strong> y te avisa quién la tiene: <em>Esta semana la tiene reservada Ana Buenfil.</em> Debajo te enumera exactamente lo que va a pasar:</p>
+<ul>
+<li>La reserva se cancelará y también los días ya cedidos.</li>
+<li>Se avisará por correo a quien la tenía y a quien recibió días.</li>
+<li>La semana quedará <strong>cerrada</strong>, no libre: no vuelve a ofrecerse hasta que la reabras.</li>
+<li>Todo queda en la bitácora con tu nombre y el motivo.</li>
+</ul>
+<p>Para poder confirmar tienes que llenar el campo <strong>Motivo</strong>. Es obligatorio y de al menos 5 caracteres. Escríbelo bien, porque <strong>lo va a leer la persona que pierde la semana</strong>, tal cual, en el correo que le llega. El ejemplo que trae la pantalla es <em>Por ejemplo: fumigación urgente de toda la casa</em>. Caben hasta 500 caracteres.</p>
+<p>Luego toca <span class="btn">Cerrar y cancelar la reserva</span>. El mensaje que verás: <em>Semana cerrada y reserva de Ana Buenfil cancelada. Queda registrado en la bitácora.</em></p>
+<p><strong>Esto es para casos de fuerza mayor</strong>, no para el día a día: una fuga, una fumigación, un daño que hace la casa inhabitable. Le estás quitando a alguien una fecha que ya tenía apartada. Cada vez que lo haces queda anotado con tu nombre y tu motivo, y esa anotación no se borra.</p>
+<p>Fíjate en un detalle importante: la semana queda <strong>Cerrada</strong>, no libre. Si quedara libre, se la llevaría el primero que refrescara la pantalla, que es justo lo que quisiste evitar al cerrarla.</p>
+<h3>Reabrir una semana</h3>
+<p>En una semana <strong>Cerrada</strong>, el botón cambia a <strong>Reabrir</strong>. Tócalo y vuelve al calendario con las mismas reglas de siempre, incluida la de los 15 días. Verás: <em>Semana reabierta: viernes 2 al jueves 8 de octubre de 2026. Avisos encolados: 5.</em> Sí, reabrir manda correo a todos, igual que abrir.</p>
+<p>Reabrir <strong>no le devuelve la semana a quien la tenía</strong>. La deja disponible para quien la quiera. Si quieres que esa persona la recupere, avísale para que vuelva a reservarla.</p>
+<hr>
+<h3>Las notas de mantenimiento, desde aquí</h3>
+<p>Al final de esta pantalla hay un bloque <strong>Notas de mantenimiento</strong> con el nombre de la casa elegida, y desde ahí también puedes crearlas, editarlas y borrarlas.</p>
+<p>Pero <strong>hay una forma más rápida</strong>: hacerlo directamente sobre el calendario, tocando los días. Es más cómodo porque ves de una vez qué fechas estás marcando. Lo tienes explicado en la sección de notas de mantenimiento.</p>
+<p>Recuerda dos cosas de estas notas: las <strong>ve todo el mundo</strong>, y <strong>no impiden reservar</strong>. Son un aviso, no un bloqueo. Si de verdad necesitas que nadie ocupe esas fechas, cierra la semana.</p>
+</section>
+<section><h2>Cómo se lee el calendario</h2>
+<p>El calendario es la pantalla principal: es lo primero que ves al entrar y es donde pasa casi todo. Vale la pena dedicarle unos minutos, porque una vez que le agarras la lógica el resto de la plataforma se explica solo.</p>
+<h3>Lo que ves al entrar</h3>
+<p>De arriba hacia abajo:</p>
+<ol>
+<li><strong>La barra de control.</strong> Lleva a la izquierda el nombre de la propiedad que estás viendo, con un punto de su color al lado, y a la derecha el mes: una flecha, el nombre del mes, otra flecha. Esta barra se queda pegada arriba aunque bajes por la pantalla, para que nunca tengas que subir a cambiar de casa o de mes.</li>
+<li><strong>El calendario</strong>, dentro de una tarjeta con una franja de color en el borde superior.</li>
+<li><strong>La leyenda</strong>, abajo del calendario: una fila de etiquetas redondeadas que te dice qué significa cada color.</li>
+<li><strong>Una línea recordatorio</strong> al pie: <em>Cada semana va de viernes 00:00 a jueves 23:59. Toca cualquiera de los dos tramos para actuar sobre la semana entera.</em></li>
+</ol>
+<p><strong>Para cambiar de propiedad:</strong> toca el nombre de la propiedad en la barra de arriba y elige otra de la lista. Cada opción trae su punto de color. Si solo hay una propiedad dada de alta, ahí no hay lista que abrir: verás el nombre y ya.</p>
+<p><strong>Para cambiar de mes:</strong> usa las flechas a los lados del nombre del mes. La flecha izquierda va al mes anterior, la derecha al siguiente.</p>
+<p>Cuando llegas a un límite, la flecha no desaparece: se apaga. Si la dejas señalada con el ratón te dice por qué:</p>
+<table>
+<thead>
+<tr>
+<th>Flecha apagada</th>
+<th>Lo que dice</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Izquierda</td>
+<td><strong>No hay semanas registradas antes de este mes</strong></td>
+</tr>
+<tr>
+<td>Derecha</td>
+<td><strong>Todavía no se puede ver más allá de este mes</strong></td>
+</tr>
+</tbody></table>
+<p>Los encabezados de las columnas son <strong>DOM LUN MAR MIÉ JUE VIE SÁB</strong>. Fíjate que <strong>VIE</strong> está resaltado en otro color: es el día en que arranca toda semana reservable, y esa marca te sirve de ancla para leer lo que viene a continuación.</p>
+<p>El día de hoy aparece con su número dentro de un círculo relleno. Los días que asoman de otro mes se ven despintados, pero siguen siendo días reales de una semana real: no los ignores.</p>
+<h3>La banda partida en dos tramos</h3>
+<figure>
+<svg viewBox="0 0 620 210" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Dos filas de calendario. La semana reservable ocupa los dos últimos días de la primera fila y los cinco primeros de la segunda.">
+  <style>
+    .dia   { font: 600 11px "Segoe UI", Arial, sans-serif; fill: #5B6B7A; }
+    .num   { font: 700 13px "Segoe UI", Arial, sans-serif; fill: #1D2A35; }
+    .numOn { fill: #14532D; }
+    .cel   { fill: #FFFFFF; stroke: #DCE3E8; }
+    .on    { fill: #DCF5E3; stroke: #2F9E5B; stroke-width: 1.5; }
+    .rot   { font: italic 11px Georgia, serif; fill: #5B6B7A; }
+    .lbl   { font: 700 10px "Segoe UI", Arial, sans-serif; fill: #14532D; }
+  </style>
+  <text class="dia" x="34" y="16" text-anchor="middle">DOM</text><text class="dia" x="116" y="16" text-anchor="middle">LUN</text><text class="dia" x="198" y="16" text-anchor="middle">MAR</text><text class="dia" x="280" y="16" text-anchor="middle">MIÉ</text><text class="dia" x="362" y="16" text-anchor="middle">JUE</text><text class="dia" x="444" y="16" text-anchor="middle">VIE</text><text class="dia" x="526" y="16" text-anchor="middle">SÁB</text>
+
+  <rect class="cel" x="2" y="26" width="78" height="52" rx="4"/>
+            <text class="num " x="34" y="57" text-anchor="middle">6</text><rect class="cel" x="84" y="26" width="78" height="52" rx="4"/>
+            <text class="num " x="116" y="57" text-anchor="middle">7</text><rect class="cel" x="166" y="26" width="78" height="52" rx="4"/>
+            <text class="num " x="198" y="57" text-anchor="middle">8</text><rect class="cel" x="248" y="26" width="78" height="52" rx="4"/>
+            <text class="num " x="280" y="57" text-anchor="middle">9</text><rect class="cel" x="330" y="26" width="78" height="52" rx="4"/>
+            <text class="num " x="362" y="57" text-anchor="middle">10</text><rect class="on" x="412" y="26" width="78" height="52" rx="8"/>
+            <text class="num numOn" x="444" y="57" text-anchor="middle">11</text><rect class="on" x="494" y="26" width="78" height="52" rx="8"/>
+            <text class="num numOn" x="526" y="57" text-anchor="middle">12</text>
+
+  <rect class="on" x="2" y="96" width="78" height="52" rx="8"/>
+            <text class="num numOn" x="34" y="127" text-anchor="middle">13</text><rect class="on" x="84" y="96" width="78" height="52" rx="8"/>
+            <text class="num numOn" x="116" y="127" text-anchor="middle">14</text><rect class="on" x="166" y="96" width="78" height="52" rx="8"/>
+            <text class="num numOn" x="198" y="127" text-anchor="middle">15</text><rect class="on" x="248" y="96" width="78" height="52" rx="8"/>
+            <text class="num numOn" x="280" y="127" text-anchor="middle">16</text><rect class="on" x="330" y="96" width="78" height="52" rx="8"/>
+            <text class="num numOn" x="362" y="127" text-anchor="middle">17</text><rect class="cel" x="412" y="96" width="78" height="52" rx="4"/>
+            <text class="num " x="444" y="127" text-anchor="middle">18</text><rect class="cel" x="494" y="96" width="78" height="52" rx="4"/>
+            <text class="num " x="526" y="127" text-anchor="middle">19</text>
+
+  <text class="lbl" x="455" y="90" text-anchor="middle">empieza aquí ↓</text>
+  <text class="lbl" x="170" y="166" text-anchor="middle">…y termina aquí</text>
+  <text class="rot" x="310" y="196" text-anchor="middle">
+    Los dos tramos verdes son LA MISMA semana: viernes 11 → jueves 17.
+  </text>
+</svg>
+<figcaption>Una semana reservable ocupa el final de una fila y el principio de la siguiente. Los dos tramos se iluminan juntos al pasar el ratón.</figcaption>
+</figure>
+<p>Esto es lo único del calendario que confunde al principio. Léelo con calma una vez y no vuelve a molestarte.</p>
+<p>El calendario se dibuja <strong>de domingo a sábado</strong>, como cualquier calendario de pared. Pero la semana que se reserva en la casa <strong>va de viernes a jueves</strong>. Las dos cosas no encajan: el viernes cae casi al final de la fila.</p>
+<p>Consecuencia: cada semana de la casa se pinta como una <strong>banda partida en dos tramos</strong>.</p>
+<ul>
+<li>El <strong>tramo corto</strong> son dos casillas, viernes y sábado. Ahí <em>empieza</em> la semana. Está al final de una fila.</li>
+<li>El <strong>tramo largo</strong> son cinco casillas, de domingo a jueves. Ahí <em>termina</em> esa misma semana. Está al principio de la fila de abajo.</li>
+</ul>
+<p>Los dos tramos son <strong>la misma semana</strong>. Tienen el mismo color, el mismo icono, y el tramo corto lleva en su esquina superior derecha una marca <strong>›</strong> que quiere decir &quot;esto sigue en la fila de abajo&quot;.</p>
+<p>Tres cosas que te lo confirman en pantalla:</p>
+<ul>
+<li><strong>Al pasar el ratón por encima de cualquiera de los dos tramos, se iluminan los dos</strong> con un contorno. Es la manera más rápida de comprobar de un vistazo dónde empieza y dónde acaba una semana.</li>
+<li><strong>Al tocar cualquiera de los dos tramos actúas sobre la semana completa.</strong> No importa si tocaste el viernes o el martes: se abre lo mismo. Como administradora, al tocar una semana verás primero un menú donde eliges qué hacer: <strong>Reservar esta semana</strong>, <strong>Abrir la reserva</strong> (si ya tiene dueño) o <strong>Crear nota de mantenimiento</strong>.</li>
+<li><strong>La etiqueta de texto vive solo en el tramo largo</strong>, en su esquina inferior derecha. En el tramo corto de dos casillas no cabe, así que ese solo lleva el color y el icono. No es un error ni una semana a medias.</li>
+</ul>
+<p>Un tramo suelto en el borde del mes tampoco es un error: el tramo largo de la primera fila cierra una semana que empezó en el mes anterior, y el tramo corto de la última fila abre una que termina en el mes siguiente. Cambia de mes con la flecha y la verás entera.</p>
+<h3>Los estados, uno por uno</h3>
+<p>Cada semana tiene un estado, y el estado se nota por tres cosas a la vez: el <strong>color</strong>, el <strong>icono</strong> y la <strong>etiqueta de texto</strong>. Nunca depende solo del color, precisamente para que se entienda igual en una pantalla mala o para quien no distingue bien los colores.</p>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Cómo se ve</th>
+<th>Qué dice la etiqueta</th>
+<th>Qué significa para ti</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Disponible</strong></td>
+<td>Verde claro, <strong>borde de rayitas</strong> (discontinuo), palomita</td>
+<td><strong>Disponible</strong></td>
+<td>La semana está abierta y cualquiera puede tomarla ya. El borde discontinuo es el &quot;hueco por llenar&quot;.</td>
+</tr>
+<tr>
+<td><strong>En curso</strong></td>
+<td>El mismo verde, pero <strong>borde continuo</strong>, reloj</td>
+<td><strong>En curso · quedan 4 días</strong> (con el número real; si queda uno solo dice <strong>En curso · queda 1 día</strong>)</td>
+<td>La semana ya empezó y sigue libre. Se puede tomar, pero quien la tome no recibe los siete días, solo los que quedan hasta el jueves. Por eso la etiqueta trae la cuenta.</td>
+</tr>
+<tr>
+<td><strong>Programada</strong></td>
+<td>Gris pizarra, candado</td>
+<td><strong>Abre el 16 sep</strong> (la fecha real de apertura; si aún no se sabe, dice <strong>Programada</strong>)</td>
+<td>La semana existe y tú ya la abriste, pero todavía no es reservable para los copropietarios. Mira el apartado siguiente: es la regla de los 15 días.</td>
+</tr>
+<tr>
+<td><strong>Reservada</strong></td>
+<td>Violeta, silueta de persona</td>
+<td><strong>El nombre de quien la tiene</strong> (por ejemplo <em>Ana Buenfil</em>). Si el nombre no está disponible, dice <strong>Reservada</strong></td>
+<td>Esa semana ya tiene dueño y no eres tú. Al tocarla puedes abrir la reserva para ver el detalle.</td>
+</tr>
+<tr>
+<td><strong>Tu reserva</strong></td>
+<td>Azul, estrella</td>
+<td><strong>Tu reserva</strong></td>
+<td>La semana es tuya. Desde ahí puedes ceder días o cancelarla.</td>
+</tr>
+<tr>
+<td><strong>Cerrada</strong></td>
+<td>Ámbar con <strong>rayado diagonal</strong>, símbolo de prohibido</td>
+<td><strong>Cerrada</strong></td>
+<td>Tú retiraste esa semana de la oferta. Nadie puede reservarla. Sigue siendo visible a propósito, para que se entienda que existe pero no se ofrece.</td>
+</tr>
+<tr>
+<td><strong>Sin apertura</strong></td>
+<td>Beige apagado, borde muy tenue, una rayita; la etiqueta va con contorno punteado en vez de rellena</td>
+<td><strong>Sin apertura</strong></td>
+<td>Esa semana nunca se abrió. No es que esté ocupada: es que no hay nada que ofrecer. Se abre desde <strong>Configuración → Propiedades</strong>.</td>
+</tr>
+<tr>
+<td><strong>Pasada</strong></td>
+<td>Gris muy claro, reloj de arena</td>
+<td><strong>Pasada</strong></td>
+<td>La semana ya terminó. No se reserva, aunque sí puedes anotarle mantenimiento.</td>
+</tr>
+</tbody></table>
+<p>La leyenda de abajo <strong>solo muestra los estados que aparecen ese mes</strong>. Si en septiembre no hay ninguna semana cerrada, no verás la etiqueta <strong>Cerrada</strong> en la leyenda. No falta nada: es que ese mes no la necesita.</p>
+<h3>La regla de los 15 días</h3>
+<figure>
+<svg viewBox="0 0 620 168" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Tres meses: agosto y septiembre reservables, octubre bloqueado hasta el 16 de septiembre.">
+  <style>
+    .mes  { font: 700 13px "Segoe UI", Arial, sans-serif; }
+    .est  { font: 600 10px "Segoe UI", Arial, sans-serif; }
+    .det  { font: 10px Georgia, serif; }
+    .hoy  { font: 700 10px Consolas, monospace; fill: #0B5E75; }
+    .rot  { font: italic 11px Georgia, serif; fill: #5B6B7A; }
+  </style>
+  <circle cx="18" cy="18" r="4" fill="#0E7490"/>
+  <text class="hoy" x="30" y="22">HOY · 24 de agosto de 2026</text>
+
+  <rect x="2"   y="40" width="196" height="72" rx="8" fill="#DCF5E3" stroke="#2F9E5B" stroke-width="1.5"/>
+  <text class="mes" x="100" y="63" text-anchor="middle" fill="#14532D">Agosto</text>
+  <text class="est" x="100" y="82" text-anchor="middle" fill="#14532D">MES EN CURSO</text>
+  <text class="det" x="100" y="99" text-anchor="middle" fill="#14532D">Se puede reservar</text>
+
+  <rect x="212" y="40" width="196" height="72" rx="8" fill="#DCF5E3" stroke="#2F9E5B" stroke-width="1.5"/>
+  <text class="mes" x="310" y="63" text-anchor="middle" fill="#14532D">Septiembre</text>
+  <text class="est" x="310" y="82" text-anchor="middle" fill="#14532D">ABRIÓ EL 17 DE AGOSTO</text>
+  <text class="det" x="310" y="99" text-anchor="middle" fill="#14532D">Se puede reservar</text>
+
+  <rect x="422" y="40" width="196" height="72" rx="8" fill="#E9EDF3" stroke="#90A0B4" stroke-width="1.5"/>
+  <text class="mes" x="520" y="63" text-anchor="middle" fill="#4E5F76">Octubre</text>
+  <text class="est" x="520" y="82" text-anchor="middle" fill="#4E5F76">ABRE EL 16 DE SEPTIEMBRE</text>
+  <text class="det" x="520" y="99" text-anchor="middle" fill="#4E5F76">Todavía no</text>
+
+  <text class="rot" x="310" y="140" text-anchor="middle">
+    Cada mes se habilita 15 días exactos antes de su día 1.
+  </text>
+  <text class="rot" x="310" y="156" text-anchor="middle">
+    Por eso una semana que ya abriste puede verse como «Programada».
+  </text>
+</svg>
+<figcaption>La regla reparte el acceso a las fechas buenas: nadie puede apartar el verano en enero.</figcaption>
+</figure>
+<p>Esta es la duda número uno que te van a plantear, así que conviene que la tengas fresca.</p>
+<p><strong>Abrir una semana y que se pueda reservar no son la misma cosa.</strong> Tú abres las semanas cuando quieres. Pero una semana <strong>del mes siguiente solo se vuelve reservable 15 días exactos antes de que empiece ese mes</strong>. Las semanas del mes en curso siempre están disponibles.</p>
+<p>Está hecho para repartir el acceso a las fechas buenas. Sin la regla, quien tenga más disciplina bloquea Semana Santa con seis meses de anticipación y los demás nunca alcanzan nada.</p>
+<p><strong>Ejemplo con calendario en mano.</strong> Estamos a finales de agosto:</p>
+<ul>
+<li>Las semanas de <strong>agosto</strong> están <strong>Disponible</strong> (o ya reservadas): es el mes en curso.</li>
+<li>Las semanas de <strong>septiembre</strong> también, porque septiembre abrió el 17 de agosto, hace días.</li>
+<li>Las semanas de <strong>octubre</strong> se ven grises con candado y dicen <strong>Abre el 16 sep</strong>. Quince días antes del 1 de octubre.</li>
+<li>Las de <strong>noviembre</strong> dirán <strong>Abre el 16 oct</strong>, y así.</li>
+</ul>
+<p>Es decir: una semana que <strong>tú misma abriste</strong> puede verse como <strong>Programada</strong>. No te la abriste mal. Simplemente todavía no le toca.</p>
+<p><strong>Tú sí puedes reservarla igualmente.</strong> Como administradora estás exenta de la regla. Si tocas una semana <strong>Programada</strong> verás el aviso <strong>Esta semana todavía no abre</strong>, con la línea <strong>Se habilita el 16 de septiembre de 2026 a las 00:00 h</strong>, y debajo un recuadro que te dice: <em>Puedes tomarla antes de la apertura. La excepción y su motivo quedan en la bitácora.</em> Ahí tienes que llenar el campo <strong>Motivo (obligatorio)</strong> y el botón dirá <strong>Reservar de todos modos</strong>. Sin motivo escrito, el botón no se activa. Cada excepción queda registrada con tu nombre y tu explicación.</p>
+<p><strong>Un copropietario NO puede.</strong> A ellos, esa misma semana les aparece gris con candado y, al tocarla, solo verán la fecha de apertura y un botón <strong>Entendido</strong>. No hay botón para reservar.</p>
+<p>Cuando faltan menos de dos días para la apertura, ese aviso además muestra una cuenta regresiva: <strong>Abre en 5 h 12 min 40 s</strong>.</p>
+<p><strong>Y al revés — la respuesta al reclamo típico.</strong> Si alguien te escribe <em>&quot;¿por qué no puedo reservar noviembre?&quot;</em>, la respuesta es esta regla. Abre el calendario, ponte en noviembre, y lee lo que dice la etiqueta de esa semana: <strong>Abre el 16 oct</strong>. Ese día, a las 00:00, le aparecerá disponible sin que tú tengas que hacer nada.</p>
+<h3>El color de cada propiedad</h3>
+<p>Cada propiedad tiene su propio <strong>color de identidad</strong>: Índigo, Turquesa, Ámbar, Rosa, Esmeralda, Cielo, Violeta o Naranja. Ese color aparece en tres lugares:</p>
+<ul>
+<li>El <strong>punto</strong> junto al nombre de la propiedad en la barra de arriba y en cada opción de la lista.</li>
+<li>La <strong>franja delgada en el borde superior</strong> de la tarjeta del calendario, y su borde.</li>
+<li>El <strong>nombre del mes</strong>.</li>
+</ul>
+<p>Sirve para una sola cosa, y es importante: <strong>que al cambiar de propiedad se note de un golpe</strong>. Todas las casas comparten la misma cuadrícula, así que sin el color es facilísimo reservar la semana de la casa equivocada. Si acabas de cambiar de propiedad y la franja de arriba no cambió de color, es que no cambiaste nada.</p>
+<p>Ojo con una cosa: <strong>el color de la propiedad nunca tiñe los estados de las semanas</strong>. Verde siempre es disponible, azul siempre es tuya, violeta siempre es de otro, en todas las propiedades por igual. Si el color de la casa pisara esos, perderías la única señal que dice si se puede reservar o no.</p>
+<h3>Los días con nota de mantenimiento</h3>
+<p>Un día con obra, fumigación o cualquier aviso lleva un <strong>punto ámbar en su esquina superior derecha</strong>.</p>
+<p>Para leer la nota:</p>
+<ul>
+<li><strong>Con ratón:</strong> pasa el cursor por encima del punto (o llega a él con el tabulador) y sale un globo con el texto.</li>
+<li><strong>En el teléfono o tableta:</strong> <strong>toca el punto</strong>. Se abre el mismo globo.</li>
+</ul>
+<p>El globo trae arriba el título <strong>Mantenimiento</strong> y debajo la nota. Si ese día tiene más de una, el título dice cuántas — por ejemplo <strong>2 notas de mantenimiento</strong> — y las lista una por una. Cada nota muestra su texto, sus fechas en palabras (<em>4 al 6 de septiembre</em>) y quién la escribió.</p>
+<p>Tres cosas que conviene tener claras:</p>
+<ul>
+<li><strong>Las notas las ve todo el mundo</strong>, no solo tú. Están puestas justamente para que nadie llegue a la casa sin saber que hay obra.</li>
+<li><strong>No impiden reservar.</strong> Una semana con nota de mantenimiento sigue estando <strong>Disponible</strong> si lo estaba. La nota informa, no bloquea.</li>
+<li><strong>Tocar el punto no abre la semana.</strong> Puedes leer la nota sin que se te abra ningún menú encima.</li>
+</ul>
+<h3>Los días cedidos</h3>
+<p>Un copropietario puede regalarle días sueltos de su semana a otro. Esos días se ven distintos <strong>dentro</strong> de la banda de la semana:</p>
+<ul>
+<li>La casilla del día se pinta de <strong>turquesa</strong>, con su propio contorno, y se distingue del color de la semana que la rodea.</li>
+<li>Debajo del número del día aparece una <strong>pastilla con las iniciales</strong> de la persona a la que se le cedió el día.</li>
+<li>Si dejas el ratón sobre esa pastilla, te dice <strong>Cedido a</strong> seguido del nombre completo.</li>
+</ul>
+<p>Cuando en el mes hay al menos un día cedido, la leyenda de abajo suma la etiqueta <strong>Día cedido</strong>.</p>
+<p>Léelo así: <strong>la semana sigue siendo de quien la reservó</strong> — la banda conserva su color violeta o azul —, pero esos días concretos los va a ocupar otra persona. Si cancelas una reserva que tenía días cedidos, esas cesiones se cancelan con ella, y el sistema te lo dice al confirmar.</p>
+</section>
+<section><h2>Reservar, cancelar, ceder días y anotar mantenimiento</h2>
+<p>Todo esto se hace desde el calendario. No hay otra pantalla: tocas una semana y desde ahí actúas.</p>
+<p>Recuerda lo que dice la línea bajo el calendario: <strong>Cada semana va de viernes 00:00 a jueves 23:59. Toca cualquiera de los dos tramos para actuar sobre la semana entera.</strong> Da igual si tocas la parte corta o la larga de la banda: es la misma semana.</p>
+<hr>
+<h3>1. El selector de acción (solo lo ves tú)</h3>
+<p>Cuando tocas una semana no reservas de inmediato. Primero se abre un cuadro que te pregunta:</p>
+<p><strong>¿Qué quieres hacer con esta semana?</strong></p>
+<p>Debajo del título aparece el rango exacto, así: <em>Viernes 4 sep 00:00 → Jueves 10 sep 23:59</em>. Léelo antes de seguir: es la confirmación de que tocaste la semana que querías.</p>
+<p>Este cuadro existe porque tú puedes hacer dos cosas distintas con el mismo gesto —reservar o anotar mantenimiento— y un toque solo no dice cuál.</p>
+<p><strong>Importante: a los copropietarios NO les sale este cuadro.</strong> Ellos tocan una semana libre y van directo al diálogo de reserva. El selector es tuyo y de nadie más.</p>
+<h4>Qué opciones te ofrece</h4>
+<p>La segunda opción, <strong>Crear nota de mantenimiento</strong>, sale <strong>siempre</strong>, en cualquier semana. La primera cambia según cómo esté la semana:</p>
+<table>
+<thead>
+<tr>
+<th>Cómo está la semana</th>
+<th>Qué opción sale arriba</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Libre y ya se puede tomar</td>
+<td><strong>Reservar esta semana</strong> — <em>Se avisará por correo a toda la casa.</em></td>
+</tr>
+<tr>
+<td>Libre pero ya empezó</td>
+<td><strong>Reservar esta semana</strong> — <em>La semana ya empezó: no quedan los siete días.</em></td>
+</tr>
+<tr>
+<td>Libre pero todavía no abre</td>
+<td><strong>Reservar esta semana</strong> — <em>Todavía no abre: podrás tomarla como excepción, con motivo.</em></td>
+</tr>
+<tr>
+<td>Reservada por ti</td>
+<td><strong>Abrir tu reserva</strong> — <em>Ceder días de la semana o cancelarla.</em></td>
+</tr>
+<tr>
+<td>Reservada por otra persona</td>
+<td><strong>Abrir la reserva</strong> — <em>Semana de [nombre]. Puedes cancelarla como administración, con motivo.</em></td>
+</tr>
+</tbody></table>
+<p>La segunda opción siempre dice lo mismo: <strong>Crear nota de mantenimiento</strong> — <em>Marca los días con obra. Se ve en el calendario de todos y no bloquea reservas.</em></p>
+<h4>Cuando la semana no se puede reservar</h4>
+<p>En vez de la opción de arriba verás una sola línea que te dice por qué. Es una de estas tres:</p>
+<ul>
+<li><em>Esa semana ya terminó: no queda nada que reservar.</em></li>
+<li><em>La semana está cerrada: se retiró de la oferta.</em></li>
+<li><em>Esa semana no tiene apertura. Se abre en Configuración → Propiedades.</em></li>
+</ul>
+<p>Aun así, la opción <strong>Crear nota de mantenimiento</strong> sigue ahí. Es a propósito: la obra suele caer justo en las semanas cerradas o ya pasadas, y anotarla no depende de que la semana esté libre.</p>
+<p>Para salir sin hacer nada, toca <span class="btn">Cerrar</span>.</p>
+<hr>
+<h3>2. Reservar una semana</h3>
+<ol>
+<li>Toca la semana en el calendario.</li>
+<li>En el selector, toca <span class="btn">Reservar esta semana</span>.</li>
+<li>Se abre el diálogo <strong>Reservar esta semana</strong>. Debajo del título vuelve a aparecer el rango exacto: <em>Viernes 4 sep 00:00 → Jueves 10 sep 23:59</em>.</li>
+<li>Verás el aviso: <em>Al confirmar se avisará por correo a todas las personas de la casa.</em></li>
+<li>Toca <span class="btn">Confirmar reserva</span>.</li>
+</ol>
+<p>Mientras se guarda, el botón dice <strong>Reservando…</strong>. Al terminar, la semana se pinta en el calendario como tuya y sale un aviso arriba: <strong>Semana reservada</strong>, con el rango y la frase <em>Avisamos por correo a toda la casa</em>.</p>
+<p>Si te arrepientes antes de confirmar, toca <span class="btn">Cancelar</span>. No se guarda nada.</p>
+<h4>Si la semana ya empezó</h4>
+<p>El diálogo añade un recuadro: <em>La semana ya empezó: quedan 3 días, no los siete completos.</em> (El número cambia según el día.) Puedes reservarla igual; simplemente no recibes la semana entera.</p>
+<h4>Si la semana todavía no abre (la regla de los 15 días)</h4>
+<p>El título cambia a <strong>Esta semana todavía no abre</strong> y te dice la fecha exacta: <em>Se habilita el 16 de septiembre de 2026 a las 00:00 h.</em> Si falta menos de dos días, debajo aparece una cuenta atrás: <em>Abre en 5 h 12 min 40 s</em>. Cuando llega a cero dice <em>Ya abrió. Recarga la página para tomarla.</em></p>
+<p>Tú estás exenta de esa espera, así que a ti sí te aparece un recuadro con borde punteado:</p>
+<div class="pantalla"><span class="t">Esto verás en pantalla</span><p><em>Puedes tomarla antes de la apertura. La excepción y su motivo quedan en la bitácora.</em></p></div>
+<p>Debajo hay un campo <strong>Motivo (obligatorio)</strong> con la pista <em>Por qué se reserva antes de tiempo</em>. Escribe algo concreto (&quot;junta de copropietarios confirmada ese fin de semana&quot;). Sin motivo, el botón no se enciende. El botón dice <strong>Reservar de todos modos</strong>.</p>
+<p>Escribe el motivo pensando en quien lo lea dentro de seis meses: es lo único que quedará para explicar por qué esa semana salió antes de tiempo.</p>
+<h4>Si alguien te ganó por un instante</h4>
+<p>Puede pasar el día de una apertura: dos personas tocando la misma semana casi al mismo tiempo. Verás un aviso rojo:</p>
+<div class="pantalla"><span class="t">Esto verás en pantalla</span><p><strong>Otra persona tomó esa semana primero</strong>
+<em>Actualizamos el calendario para que veas cómo quedó.</em></p></div>
+<p>La semana vuelve a pintarse como está de verdad, ya con el nombre de quien la tomó. No perdiste nada y no hay que deshacer nada.</p>
+<h4>Otros avisos que puedes ver al reservar</h4>
+<table>
+<thead>
+<tr>
+<th>Aviso</th>
+<th>Qué pasó</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em>Esa semana ya fue reservada.</em></td>
+<td>Alguien la tomó antes.</td>
+</tr>
+<tr>
+<td><em>Esa semana está cerrada.</em></td>
+<td>Se retiró de la oferta desde Configuración.</td>
+</tr>
+<tr>
+<td><em>Esa semana ya no existe en el calendario.</em></td>
+<td>Se borró la apertura mientras tenías el diálogo abierto.</td>
+</tr>
+<tr>
+<td><em>Esa semana se habilita el…</em></td>
+<td>Intentaste tomarla antes de tiempo sin motivo.</td>
+</tr>
+<tr>
+<td><strong>No pudimos completar la reserva</strong> / <em>Revisa tu conexión y vuelve a intentarlo.</em></td>
+<td>Se cayó la conexión. No se guardó nada; vuelve a intentarlo.</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>3. Cancelar una reserva</h3>
+<p>Se cancela desde el panel lateral que se abre por la derecha. Llegas tocando la semana y luego <strong>Abrir tu reserva</strong> (si es tuya) o <strong>Abrir la reserva</strong> (si es de alguien más).</p>
+<p>Si la semana ya terminó no hay nada que hacer: el panel solo dice <em>Esta semana ya terminó: no hay nada que cancelar ni que ceder.</em></p>
+<h4>Caso A: cancelar una reserva tuya</h4>
+<p>El panel se titula <strong>Tu semana</strong>. Baja hasta la sección <strong>Liberar la semana</strong>, que explica:</p>
+<div class="pantalla"><span class="t">Esto verás en pantalla</span><p><em>La semana vuelve a quedar disponible para todos y las cesiones que hayas hecho se cancelan con ella.</em></p></div>
+<p>Si habías regalado días, verás además la lista: <em>Se cancelarán también sáb 12 y dom 13, que tenías cedidos.</em></p>
+<ol>
+<li>Toca <span class="btn">Cancelar reserva</span>.</li>
+<li>El botón se convierte en la pregunta <strong>¿Seguro que quieres cancelar tu reserva?</strong> con dos botones.</li>
+<li>Toca <span class="btn">Sí, cancelar</span>. (O <strong>No, dejarla</strong> si te arrepentiste.)</li>
+</ol>
+<p>Al terminar sale el aviso <strong>Reserva cancelada</strong> — <em>La semana vuelve a estar disponible y avisamos a la casa.</em></p>
+<h4>Caso B: cancelar la reserva de otra persona</h4>
+<p>El panel se titula <strong>Semana de [nombre]</strong> y la sección se llama <strong>Cancelar como administración</strong>. El texto es distinto:</p>
+<div class="pantalla"><span class="t">Esto verás en pantalla</span><p><em>La semana vuelve a quedar disponible y la cancelación queda registrada en la bitácora con tu nombre y tu motivo.</em></p></div>
+<ol>
+<li>Escribe en el campo <strong>Motivo (obligatorio)</strong>. La pista dice <em>Por qué se cancela esta reserva</em>.</li>
+<li>Sin motivo el botón está apagado. Si intentas saltártelo, el sistema responde: <em>Cancelar la reserva de otra persona exige escribir un motivo: quedará en la bitácora.</em></li>
+<li>Toca <span class="btn">Cancelar (quedará en la bitácora)</span>.</li>
+<li>Confirma en <strong>¿Seguro que quieres cancelar la reserva de [nombre]?</strong> con <strong>Sí, cancelar</strong>.</li>
+</ol>
+<p>El aviso final dice <strong>Reserva cancelada por administración</strong>.</p>
+<p><strong>Por qué el motivo es obligatorio.</strong> Quitarle a alguien su semana no puede pasar en silencio. El motivo queda guardado con tu nombre y la fecha, y cualquiera puede consultarlo después. Así nadie tiene que adivinar quién deshizo qué ni por qué.</p>
+<p><strong>Avisa tú también.</strong> El sistema manda un correo automático, pero sale de una dirección que no recibe respuestas: la persona no puede contestarte por ahí. Llámala o escríbele por tu cuenta. Un correo frío diciendo que perdió su semana es la peor forma de enterarse.</p>
+<h4>Qué pasa con los días que esa persona había regalado</h4>
+<p>Se cancelan junto con la reserva, automáticamente. Si la persona le había regalado el sábado y el domingo a otro copropietario, esos dos días también se caen y quien los recibió los pierde.</p>
+<p>El aviso te lo dice con el número exacto: <em>La semana vuelve a estar disponible. Se cancelaron 2 días cedidos.</em> (Si era uno solo, dice <em>1 día cedido</em>.)</p>
+<p>Ten esto muy presente antes de cancelar una semana ajena: puedes estar afectando a <strong>dos</strong> personas, no a una. Revisa la línea <strong>Días cedidos:</strong> que aparece arriba en el panel antes de decidir.</p>
+<hr>
+<h3>4. Regalar días de una semana tuya</h3>
+<p>Solo se pueden regalar días de una semana <strong>propia</strong>. Ni siquiera tú puedes repartir los días de la semana de otra persona: el panel te lo dirá con <em>Esta semana ya tiene dueño. Solo [nombre] puede ceder sus días.</em></p>
+<ol>
+<li>Toca tu semana y elige <strong>Abrir tu reserva</strong>.</li>
+<li>En el panel, arriba, está la sección <strong>Ceder días</strong>, con esta nota: <em>Quien reciba un día aparece con sus iniciales en el calendario de todos. No hace falta que acepte.</em></li>
+<li>Verás los siete días de tu semana como pastillas: <strong>vie 4</strong>, <strong>sáb 5</strong>, <strong>dom 6</strong>, <strong>lun 7</strong>, <strong>mar 8</strong>, <strong>mié 9</strong>, <strong>jue 10</strong>. Toca los que quieras regalar. Aparece una palomita en cada uno.</li>
+<li>Los días que ya pasaron salen apagados y no se pueden tocar.</li>
+<li>En el campo <strong>Ceder a</strong> elige a la persona. Si no has elegido a nadie dice <strong>Elige a quién</strong>.</li>
+<li>Lee el resumen que aparece justo debajo: <em>Cedes sáb 5 y dom 6 a María López.</em> Si marcaste días pero no elegiste persona, dirá <em>Elige a quién le cedes esos días.</em></li>
+<li>Toca el botón. Su texto cambia según cuántos días marcaste: <strong>Ceder 1 día</strong>, <strong>Ceder 2 días</strong>, y así. Mientras guarda dice <strong>Cediendo…</strong></li>
+</ol>
+<p>Al terminar sale el aviso <strong>Días cedidos</strong> — <em>Cediste sáb 5 y dom 6 a María López.</em></p>
+<p><strong>El regalo es inmediato y no requiere aceptación.</strong> La persona no tiene que confirmar nada, ni aprobar, ni responder un correo. En cuanto tocas el botón, esos días ya son suyos y aparecen en el calendario de todos con sus iniciales.</p>
+<p>Si no hay nadie más con acceso a la plataforma, en vez del campo verás: <em>No hay nadie más con acceso a quien ceder días.</em></p>
+<h4>Cómo retirar un día que ya regalaste</h4>
+<p>El día regalado deja de ser una pastilla vacía y se convierte en una pastilla de color con las iniciales de quien lo recibió y una flechita de deshacer, así: <strong>sáb 5 · ML</strong>. Si pasas el dedo o el cursor por encima te dice <em>Cedido a María López. Toca para retirarlo.</em></p>
+<p>Tócala y el día vuelve a ser tuyo al instante. <strong>No pide confirmación</strong>, porque se deshace igual de fácil: basta con volver a regalarlo. A la persona se le avisa por correo.</p>
+<p>Sale el aviso <strong>Cesión retirada</strong> — <em>sáb 5 vuelve a ser tuyo.</em></p>
+<p>Los días regalados que <strong>ya pasaron</strong> salen atenuados y no se pueden tocar. Lo que ya se vivió no se retira.</p>
+<h4>Avisos que pueden salir al regalar</h4>
+<table>
+<thead>
+<tr>
+<th>Aviso</th>
+<th>Qué hacer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em>Estos días ya están cedidos: … Revócalos antes de volver a cederlos.</em></td>
+<td>Retira primero el regalo anterior tocando la pastilla de color.</td>
+</tr>
+<tr>
+<td><em>Estos días ya pasaron y no se pueden ceder: …</em></td>
+<td>Elige días que aún no hayan ocurrido.</td>
+</tr>
+<tr>
+<td><em>No puedes cederte días a ti misma: la semana ya es tuya.</em></td>
+<td>Elige a otra persona.</td>
+</tr>
+<tr>
+<td><em>[Nombre] ya no tiene acceso a Wellbros: no se le pueden ceder días.</em></td>
+<td>Esa persona está dada de baja.</td>
+</tr>
+<tr>
+<td><strong>No pudimos ceder esos días</strong> / <em>Revisa tu conexión y vuelve a intentarlo.</em></td>
+<td>Se cayó la conexión. Nada se guardó.</td>
+</tr>
+</tbody></table>
+<hr>
+<h3>5. Anotar mantenimiento desde el calendario</h3>
+<p>Este es el atajo que más vas a usar. Sirve para avisarle a toda la casa que hay obra, pintura, fumigación o lo que sea, en días concretos.</p>
+<p><strong>Dos cosas que no debes olvidar:</strong></p>
+<ul>
+<li>La nota <strong>la ve todo el mundo</strong>, no solo tú.</li>
+<li>La nota <strong>no impide reservar</strong>. Es información, no un bloqueo. Si quieres que nadie tome esa semana, tienes que cerrarla desde la pantalla de Configuración; la nota sola no lo hace.</li>
+</ul>
+<h4>Cómo llegar</h4>
+<ol>
+<li>Toca cualquier semana del calendario. Cualquiera: libre, reservada, cerrada, ya pasada o sin apertura.</li>
+<li>Toca <span class="btn">Crear nota de mantenimiento</span>.</li>
+<li>El cuadro cambia de título a <strong>Nota de mantenimiento</strong> y aparece el formulario. Sigue mostrando el rango de la semana arriba.</li>
+</ol>
+<h4>Cómo se eligen los días</h4>
+<p>Verás la sección <strong>Días con mantenimiento</strong> con esta nota: <em>Marca los días de esta semana. La nota se ve en el calendario de todos y no bloquea reservas.</em></p>
+<p>Debajo están los siete días de esa semana como pastillas: <strong>vie 4</strong>, <strong>sáb 5</strong>, <strong>dom 6</strong>, <strong>lun 7</strong>, <strong>mar 8</strong>, <strong>mié 9</strong>, <strong>jue 10</strong>. Solo esos. <strong>No puedes salirte de la semana que abriste</strong>: si la obra dura más, abre la semana siguiente y anótala también ahí.</p>
+<p>Toca los días que quieras. Aparece una palomita en cada uno.</p>
+<p>Si un día <strong>ya tiene una nota</strong>, su pastilla sale marcada con una llave inglesa y con otro color. Pásale el dedo o el cursor por encima y se abre un globo con la nota que ya existe, su rango y quién la escribió. Léelo antes de anotar: es lo único que te protege de escribir dos veces la misma obra.</p>
+<h4>El texto de la nota</h4>
+<p>Debajo está el campo <strong>Nota</strong>, con la pista <em>Qué se va a hacer esos días</em>.</p>
+<ul>
+<li>Mínimo <strong>3 caracteres</strong>. Si escribes menos, el formulario avisa: <em>Escribe la nota: al menos 3 caracteres.</em></li>
+<li>Máximo <strong>500 caracteres</strong>. A la derecha de la etiqueta <strong>Nota</strong> hay un contador que va marcando <strong>0/500</strong>, <strong>47/500</strong>, y al llegar al tope deja de admitir letras.</li>
+</ul>
+<p>Escribe algo que sirva a quien lo lea desde el teléfono: &quot;Pintura de fachada, andamio en la entrada&quot; es útil; &quot;mantenimiento&quot; no dice nada.</p>
+<h4>El resumen antes de guardar</h4>
+<p>Justo encima de los botones aparece siempre una línea con lo que va a pasar:</p>
+<ul>
+<li>Si no marcaste ningún día: <em>Elige al menos un día de la semana.</em></li>
+<li>Si marcaste días seguidos: <em>Se creará 1 nota: sáb 5 al lun 7.</em></li>
+<li>Si marcaste un solo día: <em>Se creará 1 nota: sáb 5.</em></li>
+</ul>
+<p>Léelo. Es tu última oportunidad de darte cuenta de que tocaste un día de más.</p>
+<h4>Días salteados: por qué a veces salen varias notas</h4>
+<p>Esto sorprende la primera vez, así que vale la pena entenderlo.</p>
+<p>Supón que marcas el <strong>sábado</strong> y el <strong>martes</strong>, dejando fuera el domingo y el lunes. El resumen dirá:</p>
+<div class="pantalla"><span class="t">Esto verás en pantalla</span><p><em>Se crearán 2 notas: sáb 5 y mar 8.</em>
+<em>Elegiste días salteados: cada tramo va en su propia nota para no anunciar obra en los días que dejaste fuera.</em></p></div>
+<p>Y el botón cambiará a <strong>Guardar 2 notas</strong>.</p>
+<p>No es un error. Si se creara <strong>una sola</strong> nota &quot;del sábado al martes&quot;, el calendario de todos pintaría también el domingo y el lunes con obra, y esos días no hay nada. Por eso cada tramo seguido va en su propia nota.</p>
+<p>La regla es simple: <strong>cada bloque de días seguidos = una nota</strong>. Si marcas sábado, domingo, martes y miércoles, salen dos notas: <em>sáb 5 al dom 6</em> y <em>mar 8 al mié 9</em>. Y el botón dirá <strong>Guardar 2 notas</strong>.</p>
+<p>Cuando después veas dos entradas en la pantalla de Configuración en vez de una, ya sabes por qué.</p>
+<h4>Guardar</h4>
+<p>Toca <span class="btn">Guardar nota</span> (o <strong>Guardar 2 notas</strong>, <strong>Guardar 3 notas</strong>, según cuántos tramos salgan). Mientras guarda dice <strong>Guardando…</strong>.</p>
+<p>Al terminar sale el aviso:</p>
+<div class="pantalla"><span class="t">Esto verás en pantalla</span><p><strong>Nota de mantenimiento creada</strong> — <em>sáb 5 al lun 7. Se ven en el calendario de toda la casa.</em></p></div>
+<p>O, si fueron varias: <strong>2 notas de mantenimiento creadas</strong>, con la lista de tramos.</p>
+<p>Si quieres salir sin guardar nada, toca <span class="btn">Volver</span>: regresas al selector de acción y no se crea nada.</p>
+<h4>Cómo se ve la nota después</h4>
+<p>En el calendario, cada día con nota lleva un <strong>punto ámbar</strong> en la esquina superior derecha de su celda.</p>
+<ul>
+<li>Con ratón: pasa el cursor por encima y se abre el globo con el texto.</li>
+<li>En el teléfono: <strong>toca el punto</strong> y se abre igual.</li>
+</ul>
+<p>El globo muestra el encabezado <strong>Mantenimiento</strong> (o <em>3 notas de mantenimiento</em> si hay varias en ese día), el texto de cada una, su rango en palabras —<em>4 al 6 de septiembre</em>— y el nombre de quien la escribió.</p>
+<p>Tocar el punto <strong>solo</strong> abre la nota; no abre el panel de la semana. Puedes leerla sin miedo a acabar en un diálogo de reserva.</p>
+<h4>Avisos que pueden salir al guardar</h4>
+<table>
+<thead>
+<tr>
+<th>Aviso</th>
+<th>Qué hacer</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><em>La nota necesita al menos 3 caracteres.</em></td>
+<td>Escribe algo más largo.</td>
+</tr>
+<tr>
+<td><em>La nota no puede pasar de 500 caracteres.</em></td>
+<td>Acórtala.</td>
+</tr>
+<tr>
+<td><em>Los días elegidos deben caer todos en la misma semana (…).</em></td>
+<td>Anota cada semana por separado.</td>
+</tr>
+<tr>
+<td><strong>No pudimos guardar la nota</strong> / <em>Revisa tu conexión y vuelve a intentarlo.</em></td>
+<td>Se cayó la conexión. No se guardó nada.</td>
+</tr>
+</tbody></table>
+<p>Este formulario es un atajo para <strong>crear</strong>. Para <strong>editar</strong> o <strong>borrar</strong> una nota ya existente, ve a la pantalla de Configuración, a Propiedades.</p>
+</section>
+<section><h2>Los copropietarios, la bitácora y los correos</h2>
+<p>Todo lo de esta parte vive en dos sitios del menú: <strong>Configuración</strong> (para las cuentas) y <strong>Bitácora</strong> (para el registro). Los dos aparecen solo en tu menú: quien entra con una cuenta normal ni los ve ni puede llegar a ellos escribiendo la dirección.</p>
+<h3>Dar de alta a un copropietario</h3>
+<p>En Wellbros nadie puede registrarse solo. Todas las cuentas las creas tú. La pantalla te lo recuerda arriba: <em>&quot;No existe registro público: todas las cuentas se crean aquí. Las cuentas no se borran, se desactivan.&quot;</em></p>
+<ol>
+<li>Entra a <strong>Configuración</strong>. Se abre en la pestaña <strong>Usuarios</strong>.</li>
+<li>Toca <span class="btn">Nueva cuenta</span>. Se abre la ventana <strong>Nueva cuenta</strong>.</li>
+<li>Llena los campos:</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>¿Obligatorio?</th>
+<th>Qué poner</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Nombre completo</strong></td>
+<td>Sí</td>
+<td>Nombre y apellidos, mínimo 3 letras. Es el nombre que verá todo el mundo en el calendario y en la bitácora.</td>
+</tr>
+<tr>
+<td><strong>Correo</strong></td>
+<td>Sí</td>
+<td>Es la identidad de la cuenta. Con este correo entra la persona, y <strong>no se puede cambiar después</strong>. Escríbelo con calma.</td>
+</tr>
+<tr>
+<td><strong>Teléfono (opcional)</strong></td>
+<td>No</td>
+<td>Ver abajo.</td>
+</tr>
+<tr>
+<td><strong>Acepta avisos por WhatsApp</strong></td>
+<td>No</td>
+<td>Casilla. Solo se puede marcar si escribiste un teléfono.</td>
+</tr>
+<tr>
+<td><strong>Rol</strong></td>
+<td>Sí (ya viene puesto)</td>
+<td><strong>Usuaria o usuario</strong> para un copropietario normal. <strong>Superusuaria</strong> solo para quien vaya a administrar como tú.</td>
+</tr>
+</tbody></table>
+<ol start="4">
+<li>Toca <span class="btn">Crear cuenta</span>.</li>
+</ol>
+<p><strong>Sobre el teléfono.</strong> Hoy no se usa para nada. La aplicación no manda mensajes de WhatsApp todavía; el campo está listo para cuando se active. Si marcas <strong>Acepta avisos por WhatsApp</strong>, debajo verás <em>&quot;El canal está preparado pero todavía no envía nada.&quot;</em> Puedes dejarlo en blanco sin problema. Si lo escribes, tiene que llevar el signo + y la clave del país, así: <strong>+5219981234567</strong>. Si no lo pones así, la pantalla te dirá <em>&quot;El teléfono debe ir en formato E.164, p. ej. +5219981234567&quot;</em>.</p>
+<p><strong>Sobre el rol.</strong> La cuenta <strong>Superusuaria</strong> administra todo y queda exenta de la regla de los 15 días. No la repartas por comodidad: quien la tenga puede cancelar reservas ajenas y ver la bitácora.</p>
+<h4>La contraseña: este es el paso delicado</h4>
+<p>Al guardar, la ventana cambia y aparece <strong>Cuenta creada</strong> con una contraseña larga y rara. Debajo dice: <em>&quot;Esta contraseña temporal para [nombre] no vuelve a mostrarse. Cópiala ahora y entrégala por un canal seguro (nunca por correo).&quot;</em></p>
+<p>Es literal. <strong>Esa contraseña no se vuelve a ver nunca.</strong> No se guarda en ningún lado que puedas consultar y el sistema no se la manda por correo a nadie. Si cierras la ventana sin copiarla, la cuenta queda inservible.</p>
+<ol>
+<li>Toca <span class="btn">Copiar</span> (el botón cambia a <strong>Copiada</strong>). Si no funciona, toca dentro del recuadro: se selecciona sola y la puedes copiar a mano.</li>
+<li>Pégala donde vayas a entregarla, antes de tocar <strong>Listo</strong>.</li>
+<li>Toca <span class="btn">Listo</span>.</li>
+</ol>
+<p><strong>Cómo se la entregas.</strong> En persona, por llamada, o por un mensaje directo a esa persona y a nadie más. <strong>Nunca en el chat de grupo de los copropietarios</strong> y nunca por correo. Motivo práctico, no paranoia: esa contraseña abre la cuenta de otra persona, y en un grupo la ve gente que no debería.</p>
+<p><strong>Avísale de lo que le va a pasar la primera vez.</strong> Cuando entre con esa contraseña, la aplicación no lo deja pasar al calendario: lo manda a la pantalla <strong>Cambia tu contraseña</strong>, que le explica <em>&quot;Entraste con una contraseña que te dio otra persona, así que ahora mismo no eres la única que la conoce. Elige la tuya y lo serás.&quot;</em> Ahí le pide <strong>La contraseña con la que acabas de entrar</strong>, <strong>Tu contraseña nueva</strong> y <strong>Repite la contraseña nueva</strong>, y toca <span class="btn">Cambiar contraseña y entrar</span>. La nueva debe tener 12 caracteres o más. No pide mayúsculas ni símbolos: una frase larga que recuerde funciona mejor que una palabra con signos.</p>
+<p>Dile las dos cosas juntas: <em>&quot;Esta es tu contraseña de arranque; en cuanto entres te va a pedir que la cambies por una tuya.&quot;</em> Así no te llama pensando que se rompió algo.</p>
+<p><strong>Si el correo ya existe</strong>, la ventana te dirá <em>&quot;Ya hay una cuenta con el correo [correo].&quot;</em> Puede que esa persona ya esté dada de alta pero desactivada: marca <strong>Mostrar cuentas desactivadas</strong> en la lista para verla y <strong>Reactivar</strong> en vez de crear otra.</p>
+<h3>Editar una cuenta</h3>
+<p>En la fila de la persona, toca <span class="btn">Editar</span>. Se abre <strong>Editar cuenta</strong>.</p>
+<p>Puedes cambiar el <strong>Nombre completo</strong>, el <strong>Teléfono</strong>, la casilla de WhatsApp y el <strong>Rol</strong>. Toca <span class="btn">Guardar cambios</span>.</p>
+<p>El <strong>Correo</strong> aparece apagado y no se deja escribir. La ventana lo dice: <em>&quot;El correo es la identidad de la cuenta y no se puede cambiar.&quot;</em> Si alguien cambia de correo de verdad, la única salida es dar de baja esa cuenta y crear una nueva con el correo nuevo. La persona empieza otra vez con contraseña temporal, y sus reservas viejas quedan a nombre de la cuenta antigua.</p>
+<p><strong>No puedes quitarte a ti misma el rol de superusuaria</strong> si eres la única. Si lo intentas, verás <em>&quot;Es la única superusuaria activa: nombra a otra antes de quitarle el rol o darla de baja.&quot;</em> Es una protección: sin ninguna superusuaria activa nadie podría abrir semanas ni dar de alta a nadie, y no habría forma de arreglarlo desde la aplicación.</p>
+<p>Para encontrar a alguien rápido, usa la caja <strong>Buscar</strong> de arriba (<strong>Nombre, correo o teléfono</strong>). Si no aparece nadie: <em>&quot;No hay cuentas que coincidan con la búsqueda.&quot;</em></p>
+<h3>Dar de baja y volver a dar de alta</h3>
+<p>Las cuentas <strong>no se borran</strong>. Se desactivan. El historial de esa persona —sus reservas, sus cesiones, todo lo que hizo— se queda intacto en la bitácora y en el calendario. Solo pierde el acceso.</p>
+<p>En su fila, toca <span class="btn">Desactivar</span>. Se abre <strong>Desactivar cuenta</strong> y te dice: <em>&quot;[Nombre] dejará de poder entrar. Sus sesiones abiertas se cierran de inmediato.&quot;</em> Si esa persona tenía la aplicación abierta en su teléfono, se le cierra ahí mismo.</p>
+<p><strong>Lo importante: sus semanas futuras.</strong> Antes de dejarte confirmar, la aplicación va a buscar las reservas que esa persona tiene de hoy en adelante. Verás un momento <em>&quot;Buscando reservas futuras…&quot;</em> y luego una de estas tres cosas:</p>
+<ul>
+<li><em>&quot;No tiene semanas reservadas de aquí en adelante.&quot;</em> — Adelante sin más.</li>
+<li>Un recuadro amarillo: <em>&quot;[Nombre] tiene 3 semanas reservadas que todavía no terminan&quot;</em>, con la lista: la propiedad y el rango de cada una (por ejemplo <em>&quot;Casa del Lago · viernes 2 al jueves 8 de octubre de 2026&quot;</em>). Debajo: <em>&quot;Desactivar la cuenta <strong>no las cancela</strong>: seguirán ocupando esas semanas. Si quieres liberarlas, cancélalas antes desde el calendario.&quot;</em></li>
+<li>Un aviso rojo de que no pudo revisarlas. Entonces míralo tú en el calendario antes de seguir.</li>
+</ul>
+<p><strong>La decisión de cancelar esas semanas es tuya y hay que tomarla aparte.</strong> Dar de baja no las toca. Si esa persona se va de la copropiedad y quieres que sus semanas vuelvan al calendario, ve al calendario, entra en cada semana y cancélala <strong>antes</strong> de desactivar la cuenta. Si prefieres respetárselas (por ejemplo, se va a fin de año pero ya pagó diciembre), no hagas nada: se quedan ocupadas.</p>
+<p>Puedes escribir un <strong>Motivo (opcional)</strong> —<em>&quot;Queda anotado en la bitácora.&quot;</em>— y toca <span class="btn">Desactivar de todos modos</span>. Ese nombre alarmante del botón es a propósito: te está diciendo que sabe que hay semanas colgando.</p>
+<p>Para revertirlo: marca <strong>Mostrar cuentas desactivadas (N)</strong> debajo de la búsqueda, busca la fila con la etiqueta roja <strong>Desactivada</strong> y toca <span class="btn">Reactivar</span>. Verás <em>&quot;[Nombre] volverá a poder entrar y reservar.&quot;</em> Su contraseña sigue siendo la misma que tenía.</p>
+<p><strong>No puedes desactivarte a ti misma.</strong> El botón de tu propia fila está apagado y al pasar el dedo por encima dice <em>&quot;No puedes desactivar tu propia cuenta.&quot;</em></p>
+<p>Una cuenta desactivada además <strong>deja de recibir todos los correos</strong> del sistema. Es lo esperado: quien se fue no tiene por qué seguir enterándose del movimiento de la casa.</p>
+<h3>La bitácora</h3>
+<p>Entra por <strong>Bitácora</strong> en el menú. Arriba dice: <em>&quot;Todo lo que ha pasado en Wellbros, en orden, de lo más reciente a lo más antiguo. Solo tú ves esta pantalla y nada de lo que hay aquí se puede editar ni borrar.&quot;</em></p>
+<p><strong>Para qué sirve, en una frase:</strong> para que cuando alguien pregunte <em>&quot;¿quién canceló mi semana?&quot;</em> o <em>&quot;¿por qué la semana de Semana Santa la tomó él si no estaba abierta?&quot;</em>, tú puedas responder con un dato exacto —quién, qué día, a qué hora y con qué motivo— en lugar de con una discusión de memoria contra memoria. Es una libreta de la casa, no una cámara de vigilancia. Nadie más que tú la ve, y ni tú puedes cambiar lo que hay escrito ahí. Eso último es lo que la hace valer: si se pudiera editar, no probaría nada.</p>
+<p><strong>Qué queda anotado.</strong> Prácticamente todo: reservas creadas y canceladas, semanas abiertas y cerradas, días cedidos y retirados, altas, ediciones y bajas de cuentas, cambios de contraseña, propiedades creadas y editadas, notas de mantenimiento, cambios en la regla de los 15 días, y los accesos (quién entró, quién salió y los intentos fallidos de entrar).</p>
+<p><strong>Cómo se lee.</strong> Cada línea está escrita en español normal, no en clave. Verás cosas como <em>&quot;Ivonne B. canceló la reserva de Marta L.&quot;</em> o <em>&quot;Marta L. cedió 2 días a Jorge P.&quot;</em>, con la propiedad y la semana en la columna de la derecha. La tabla tiene cuatro columnas: <strong>Cuándo</strong>, <strong>Quién</strong>, <strong>Qué</strong> y <strong>Sobre qué</strong>. Debajo de cada frase hay un <strong>Ver detalle</strong> que abre la anotación completa tal como se guardó el día del hecho; es la evidencia, por si la frase se te queda corta. Se cierra con <strong>Ocultar detalle</strong>.</p>
+<p><strong>Los filtros</strong>, en la barra de arriba:</p>
+<table>
+<thead>
+<tr>
+<th>Filtro</th>
+<th>Para qué</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Desde</strong> / <strong>Hasta</strong></td>
+<td>Acotar por fechas.</td>
+</tr>
+<tr>
+<td><strong>Acción</strong></td>
+<td>Elegir qué tipo de cosas ver.</td>
+</tr>
+<tr>
+<td><strong>Propiedad</strong></td>
+<td>Ver solo lo de una casa.</td>
+</tr>
+</tbody></table>
+<p>Toca <span class="btn">Filtrar</span> para aplicarlos y <strong>Limpiar</strong> para volver a verlo todo. Abajo del todo, <strong>Cargar más</strong> trae las entradas más antiguas; cuando ya no queden verás <em>&quot;No hay más entradas anteriores con estos filtros.&quot;</em></p>
+<p>En <strong>Acción</strong>, además de cada acción suelta, tienes agrupaciones: <strong>Todo: reservas</strong>, <strong>Todo: semanas</strong>, <strong>Todo: cesiones</strong>, <strong>Todo: usuarios</strong>, <strong>Todo: propiedades y política</strong> y <strong>Todo: accesos</strong>. Y arriba de todas, la que más vas a usar: <strong>Solo entradas sensibles</strong>.</p>
+<p><strong>Las entradas sensibles.</strong> Cuatro cosas no se quedan disimuladas entre cien accesos correctos. Salen con el fondo teñido y una etiqueta roja <strong>Revisar</strong>:</p>
+<ul>
+<li><strong>Cancelación por administración</strong> — alguien (tú, normalmente) canceló la reserva de otra persona.</li>
+<li><strong>Reserva fuera de ventana</strong> — se reservó una semana saltándose la regla de los 15 días. Aquí aparece el motivo que se escribió, porque ese motivo es obligatorio.</li>
+<li><strong>Reserva rechazada por ventana</strong> — alguien intentó reservar antes de tiempo y el sistema no lo dejó.</li>
+<li><strong>Cierre de semana reservada</strong> — se cerró una semana que alguien ya tenía tomada, y esa reserva se canceló con ella.</li>
+</ul>
+<p>Que aparezcan destacadas no significa que estén mal. Son decisiones legítimas y a veces necesarias. Significa que son excepciones, y que una excepción tiene que poder encontrarse sin buscarla. Tú misma vas a agradecerlo dentro de un año.</p>
+<p>Un detalle: la bitácora <strong>no se puede filtrar por persona</strong>. Si buscas lo de alguien concreto, filtra por fechas o por acción y mira la columna <strong>Quién</strong>, que trae el nombre y el correo de cada uno.</p>
+<h3>Los correos que manda el sistema</h3>
+<p>Wellbros manda correos solo. Tú no tienes que escribir ninguno. Cada persona recibe su propio correo, con su nombre y sus enlaces: nunca se manda un correo con todos en copia, así que las direcciones de los copropietarios no circulan entre ellos.</p>
+<table>
+<thead>
+<tr>
+<th>Qué pasa</th>
+<th>Asunto del correo</th>
+<th>Quién lo recibe</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Alguien reserva una semana</td>
+<td><strong>Semana reservada — [propiedad], [semana]</strong></td>
+<td>Todos los copropietarios activos, incluido quien reservó</td>
+</tr>
+<tr>
+<td>Se cancela una reserva</td>
+<td><strong>Semana liberada — [propiedad], [semana]</strong></td>
+<td>Todos los copropietarios activos, más quien tenía la semana y quienes hubieran recibido días de ella</td>
+</tr>
+<tr>
+<td>Abres semanas al calendario (una o varias de golpe)</td>
+<td><strong>Nuevas semanas disponibles en [propiedad]</strong></td>
+<td>Todos los copropietarios activos</td>
+</tr>
+<tr>
+<td>Reabres una semana que estaba cerrada</td>
+<td><strong>Nuevas semanas disponibles en [propiedad]</strong></td>
+<td>Todos los copropietarios activos</td>
+</tr>
+<tr>
+<td>Cierras una semana que alguien tenía reservada</td>
+<td><strong>Semana liberada — [propiedad], [semana]</strong></td>
+<td>Solo quien la tenía y quienes hubieran recibido días de ella</td>
+</tr>
+<tr>
+<td>Alguien cede días de su semana</td>
+<td><strong>[Nombre] te cedió días en [propiedad]</strong> (a quien los recibe) / <strong>Días cedidos — …</strong> (a los demás)</td>
+<td>Quien cede, quien recibe y tú</td>
+</tr>
+<tr>
+<td>Alguien retira días que había cedido</td>
+<td><strong>[Nombre] revocó los días que te había cedido</strong> / <strong>Cesión revocada — …</strong></td>
+<td>Quien cedía, quien recibía y tú</td>
+</tr>
+</tbody></table>
+<p>Tres cosas que conviene saber:</p>
+<ul>
+<li><strong>Las cancelaciones de un mes que todavía no abre se avisan más tarde.</strong> Si cancelas una semana de un mes que aún no está disponible, el correo no sale en ese momento: sale el día y la hora en que ese mes abre, y dice <em>&quot;La semana podrá reservarse a partir del [fecha]&quot;</em>. Es a propósito: anunciar antes una semana que nadie puede tomar solo daría ventaja a quien lea el correo a deshoras.</li>
+<li><strong>Cancelar arrastra los días cedidos.</strong> El correo lo aclara al final: <em>&quot;Si había días cedidos en esa semana, también quedaron sin efecto.&quot;</em></li>
+<li><strong>Las notas de mantenimiento no mandan correo.</strong> Se ven en el calendario y ya.</li>
+</ul>
+<h4>La dirección desde la que salen no recibe respuestas</h4>
+<p>Los correos llegan desde la dirección de notificaciones de Wellbros (<strong><a href="mailto:notificaciones@wellbrosproperties.lat">notificaciones@wellbrosproperties.lat</a></strong>). Ese buzón <strong>no existe</strong>. Nadie lo lee, porque no hay nadie ni nada al otro lado.</p>
+<p>Y aquí está la trampa: al pie de cada correo hay una línea que dice <em>&quot;Puedes responder a este correo para escribir a la administración.&quot;</em> <strong>Eso hoy no es cierto.</strong> Si un copropietario le da a Responder para decirte <em>&quot;oye, esa semana la quería yo&quot;</em>, ese mensaje <strong>no te llega, ni le rebota a él, ni queda en ningún lado. Se pierde en silencio.</strong></p>
+<p>Díselo a todos desde el principio, y repítelo la primera vez que alguien te reclame algo que juraba haberte escrito: <strong>los correos de Wellbros son avisos de una sola dirección; para hablar conmigo, escríbeme a mí directamente.</strong></p>
+<h3>Si algo no sale como esperas</h3>
+<p><strong>&quot;Abrí las semanas pero un copropietario dice que no puede reservar.&quot;</strong>
+Casi siempre es la regla de los 15 días, y no un error. Abrir una semana la pone en el calendario, pero las semanas del <strong>mes siguiente</strong> no se pueden tomar hasta 15 días exactos antes de que empiece ese mes. Las del mes en curso siempre se pueden. Pídele que toque la semana: la ventana que se abre le dirá <strong>Esta semana todavía no abre</strong> y <strong>Se habilita el [día] a las 00:00 h</strong>. Si faltan menos de dos días, hasta le pone una cuenta regresiva. Es la regla que impide que alguien acapare las fechas buenas con meses de anticipación, así que lo correcto es dejar que espere.</p>
+<p>Tú sí puedes tomarla antes: al abrir esa misma ventana, a ti te aparece un recuadro con <strong>Motivo (obligatorio)</strong> y el botón <strong>Reservar de todos modos</strong>. Lo que escribas queda en la bitácora marcado como <strong>Reserva fuera de ventana</strong>, y ese es el trato: puedes hacerlo, pero queda dicho por qué.</p>
+<p><strong>&quot;No me llegó el correo.&quot;</strong>
+Que mire primero la carpeta de correo no deseado o spam. La primera vez es muy normal: el buzón todavía no conoce la dirección de Wellbros. Que marque ese correo como &quot;no es spam&quot; y que agregue la dirección a sus contactos; a partir de ahí los siguientes llegan bien.</p>
+<p>Si no está ahí, comprueba en <strong>Configuración › Usuarios</strong> que el <strong>Correo</strong> de esa persona esté bien escrito (una letra de más y el correo se va a la nada) y que su cuenta no esté <strong>Desactivada</strong>: las cuentas desactivadas no reciben nada.</p>
+<p>Si un correo no consigue salir a la primera, el sistema lo reintenta solo durante unas horas. Si aun así no sale, deja de intentarlo en vez de mandar copias repetidas. No hay un botón para reenviarlo: si era algo importante, díselo tú.</p>
+<p><strong>&quot;Reservé y quiero deshacerlo.&quot;</strong>
+Ve al calendario y toca la semana reservada. Se abre un panel lateral con <strong>Liberar la semana</strong>. Toca <span class="btn">Cancelar reserva</span> y luego confirma con <strong>Sí, cancelar</strong> (o <strong>No, dejarla</strong> si te arrepientes). La semana vuelve a quedar libre para todos y sale el correo de <strong>Semana liberada</strong>. Si habías cedido días de esa semana, se cancelan con ella y te lo avisa antes.</p>
+<p>Para cancelar la reserva <strong>de otra persona</strong>, el panel se llama <strong>Cancelar como administración</strong>, te pide <strong>Motivo (obligatorio)</strong> y el botón dice <strong>Cancelar (quedará en la bitácora)</strong>. El motivo no es un trámite: es lo que vas a poder enseñar cuando esa persona pregunte.</p>
+<p>Si la semana ya terminó, verás <em>&quot;Esta semana ya terminó: no hay nada que cancelar ni que ceder.&quot;</em> Lo pasado no se toca.</p>
+<p><strong>&quot;¿Puedo reservar a nombre de otra persona?&quot;</strong>
+No. Hoy no se puede desde ninguna pantalla, ni siquiera con tu cuenta. Cuando reservas, la semana queda siempre a tu nombre.</p>
+<p>Si un copropietario no puede entrar y necesita su semana, tienes dos salidas honestas: que entre desde su cuenta (aunque sea con tu ayuda por teléfono), o reservarla tú y luego <strong>cederle los días</strong> desde el calendario, que sí existe. La segunda deja la semana a tu nombre en el calendario y en la bitácora, así que no la uses como costumbre: dentro de seis meses nadie recordará que esa semana era de él.</p>
+<p><strong>&quot;Se me olvidó la contraseña.&quot;</strong>
+Hoy Wellbros <strong>no tiene recuperación automática</strong>. No hay un &quot;¿olvidaste tu contraseña?&quot; en la pantalla de entrada, y no hay ningún botón que te deje ponerle una contraseña nueva a otra persona desde <strong>Configuración</strong>. Tampoco tú puedes ver la de nadie: no están guardadas de forma que alguien pueda leerlas, ni siquiera tú.</p>
+<p>Si le pasa a un copropietario, la única salida real es pedírselo a quien te instaló la plataforma, que puede generarle una contraseña nueva desde el servidor. Y si te pasa a ti, exactamente lo mismo, así que <strong>guarda tu contraseña en un sitio seguro desde hoy</strong>: eres la única que puede abrir semanas y dar de alta a la gente.</p>
+<p>Mientras tanto, la pantalla de entrada le dirá siempre lo mismo, se equivoque de correo o de contraseña: <em>&quot;No pudimos iniciar sesión con esos datos. Revísalos e inténtalo de nuevo.&quot;</em> No es que la aplicación no sepa cuál de los dos falló; es que decirlo en voz alta le regalaría a un desconocido la lista de correos que sí existen.</p>
+<p><strong>&quot;Alguien quiere cambiar su correo.&quot;</strong>
+No se puede. El correo es la identidad de la cuenta y está bloqueado en la pantalla de edición. Si es imprescindible, da de baja la cuenta vieja y crea una nueva con el correo nuevo, sabiendo que la persona vuelve a empezar con contraseña temporal y que sus reservas anteriores siguen figurando a nombre de la cuenta antigua.</p>
+<p><strong>&quot;Un copropietario dice que él nunca marcó lo de WhatsApp.&quot;</strong>
+Da igual: hoy no se manda ni un solo mensaje de WhatsApp. La casilla y el teléfono están guardados esperando a que ese canal se active. Nadie va a recibir nada por ahí sin que se anuncie antes.</p>
+<p><strong>&quot;Me llegan correos de cosas que hice yo.&quot;</strong>
+Es lo esperado. Cuando reservas o cancelas, el aviso sale para todos los copropietarios activos y tú estás entre ellos. Sirve como acuse de recibo: si te llegó a ti, les llegó a los demás.</p>
+</section>
+
+</body></html>
