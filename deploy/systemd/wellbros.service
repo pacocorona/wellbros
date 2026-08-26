@@ -15,7 +15,10 @@ Environment=WELLBROS_NODE=/usr/bin/node
 Environment=PORT=3000
 EnvironmentFile=/srv/wellbros/shared/.env
 # Escucha SOLO en loopback: nginx es el unico que la expone.
-ExecStart=${WELLBROS_NODE} node_modules/next/dist/bin/next start -p ${PORT} -H 127.0.0.1
+# La ruta es literal a propósito: systemd NO expande variables en la posición
+# del ejecutable (falla con 203/EXEC). El lanzador lee WELLBROS_NODE y PORT del
+# entorno que systemd le pasa.
+ExecStart=/srv/wellbros/bin/run-app.sh
 Restart=always
 RestartSec=5
 

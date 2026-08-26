@@ -485,9 +485,17 @@ sudo -u wellbros -H env PGHOST=localhost PGUSER=wellbros_user psql -d wellbros -
 ```bash
 install -m 750 -o wellbros -g wellbros /srv/wellbros/app/deploy/bin/deploy.sh /srv/wellbros/bin/
 install -m 750 -o wellbros -g wellbros /srv/wellbros/app/deploy/bin/backup.sh /srv/wellbros/bin/
+install -m 750 -o wellbros -g wellbros /srv/wellbros/app/deploy/bin/run-app.sh /srv/wellbros/bin/
+install -m 750 -o wellbros -g wellbros /srv/wellbros/app/deploy/bin/run-worker.sh /srv/wellbros/bin/
 ```
 
-`deploy.sh` reinicia los dos servicios, y para eso el usuario `wellbros`
+Los dos  son los lanzadores que ejecuta systemd. Existen porque
+systemd **no expande variables en la posición del ejecutable** de :
+un  falla con . El lanzador sí
+lee  y  del entorno, que es lo que permite usar un Node
+propio sin tocar el del sistema.
+
+ reinicia los dos servicios, y para eso el usuario `wellbros`
 necesita permiso — que **hoy no existe en ninguna parte**. Sin esta entrada, el
 despliegue llega hasta el final y falla justo en el reinicio:
 

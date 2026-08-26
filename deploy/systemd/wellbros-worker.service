@@ -13,7 +13,8 @@ Environment=WELLBROS_NODE=/usr/bin/node
 EnvironmentFile=/srv/wellbros/shared/.env
 # Proceso aparte de la web: un fallo de envio de correo no debe afectar
 # a las peticiones de los usuarios, ni al reves.
-ExecStart=${WELLBROS_NODE} node_modules/tsx/dist/cli.mjs src/lib/notifications/worker.ts
+# Ruta literal: ver la nota de wellbros.service.
+ExecStart=/srv/wellbros/bin/run-worker.sh
 Restart=always
 RestartSec=15
 
