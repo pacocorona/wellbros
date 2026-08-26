@@ -19,8 +19,9 @@ ENV_FILE=/srv/wellbros/shared/.env
 # suelto en la raíz no lo borraba nadie. Con un despliegue por semana eso son
 # decenas de volcados acumulándose hasta llenar el disco.
 BK=/srv/wellbros/backups/pre-deploy
-SALUD=http://127.0.0.1:3000/api/health
 INTENTOS_SALUD=15
+# SALUD no se define aquí: el puerto sale de PORT, que vive en el .env y todavía
+# no está cargado. Se arma más abajo, después de leerlo.
 
 # ───────────────────────────────────────────── comprobaciones previas
 
@@ -66,6 +67,13 @@ if [ -z "${DATABASE_URL:-}" ]; then
   echo '       npm ci) aborta y no se llega ni a compilar.' >&2
   exit 1
 fi
+
+# El puerto sale del MISMO sitio que lo usa la unidad de systemd para arrancar
+# la aplicación. Tenerlo escrito aquí a mano fue un fallo real: en un servidor
+# donde el 3000 ya estaba ocupado por otra aplicación, la comprobación
+# preguntaba en el puerto equivocado y daba por caído un despliegue correcto.
+PUERTO_APP="${PORT:-3000}"
+SALUD="http://127.0.0.1:${PUERTO_APP}/api/health"
 
 # Conexión de pg_dump. No se deriva de DATABASE_URL a propósito: esa cadena
 # lleva parámetros de Prisma (?schema=public) que libpq rechaza. La contraseña
