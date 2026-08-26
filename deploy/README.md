@@ -63,7 +63,80 @@ dig +short MX send.wellbrosproperties.lat
 
 ---
 
-## 2. Paquetes del sistema
+## 2. Verificación previa — **empieza SIEMPRE por aquí**
+
+Este servidor está en producción y ya tiene cosas instaladas. Instalar a ciegas
+lo que el runbook pide no es inofensivo:
+
+- En Debian, `apt install postgresql` sobre una instalación existente **no la
+  reemplaza**: añade otra versión en paralelo, con su propio clúster en otro
+  puerto. Acabarías con dos y sin saber cuál usa la aplicación.
+- Si nginx ya sirve otros sitios, un `server_name` repetido o una configuración
+  que ya venía rota hacen fallar el `reload` y **tiran los sitios que
+  funcionaban**.
+- Y el peor de todos: **`ufw enable` puede dejarte fuera del servidor** si tu
+  SSH no escucha en el puerto 22.
+
+Antes de instalar nada, ejecuta la verificación. **Solo lee**: no instala, no
+modifica, no arranca ni detiene nada, y puedes repetirla las veces que quieras.
+
+```bash
+cd /tmp && rm -rf wellbros-check
+git clone --depth 1 https://github.com/pacocorona/wellbros.git wellbros-check
+bash wellbros-check/deploy/bin/preflight.sh
+```
+
+Comprueba el sistema, Node, PostgreSQL (versión, clústeres, puertos, `citext`,
+si el rol y la base ya existen), nginx y sus sitios, los puertos 80/443/3000,
+el cortafuegos, certbot y sus certificados, el usuario y los directorios de
+Wellbros, y el DNS. Cada línea termina en uno de cuatro veredictos:
+
+| Veredicto | Significa |
+|---|---|
+| `[ OK ]` | Está y sirve. **No hagas nada.** |
+| `[ FALTA ]` | No está. Hay que instalarlo. |
+| `[ REVISAR ]` | Está pero no encaja, o hay algo que decidir. **Resuélvelo antes de seguir.** |
+| `[ AVISO ]` | No bloquea, pero conviene saberlo. |
+
+Al final imprime dos listas: lo que hay que resolver antes de continuar y lo
+que falta por instalar. **Instala solo lo que aparezca en esa segunda lista.**
+
+Si todo sale en verde, salta directo a la §5 (primera instalación).
+
+### Qué hacer con los casos más probables
+
+**PostgreSQL ya existe.** Es lo normal en un servidor en uso. No lo instales de
+nuevo. Fíjate en dos cosas del informe:
+
+- **El puerto del clúster activo.** Si no es el 5432, tu `DATABASE_URL` debe
+  llevar ese puerto.
+- **La versión.** El esquema necesita la 13 o superior (usa `gen_random_uuid()`
+  nativo y columnas generadas `STORED`). De la 13 en adelante, todo bien.
+
+Y comprueba que `citext` aparezca como disponible: la migración la crea y sin
+ella se detiene a mitad. En Debian viene dentro del propio paquete del servidor,
+así que si PostgreSQL está, casi seguro que está.
+
+**Nginx ya sirve otros sitios.** Wellbros añade su propio archivo y no toca los
+demás. Antes de recargar, `nginx -t` tiene que pasar limpio — si ya venía con
+errores, arréglalos primero o el `reload` tirará todo.
+
+**ufw ya está activo.** No lo actives de nuevo ni reinicies sus reglas: añade
+solo lo que falte.
+
+```bash
+ufw allow 80/tcp && ufw allow 443/tcp
+```
+
+**El usuario o los directorios ya existen.** Habrá un despliegue previo. No
+vuelvas a clonar: actualiza con `deploy.sh` (§12).
+
+---
+
+## 3. Paquetes del sistema
+
+> Salta lo que la verificación haya marcado como `[ OK ]`. Este bloque instala
+> todo de golpe y solo sirve para un servidor recién hecho.
 
 ```bash
 apt update && apt -y full-upgrade
@@ -115,7 +188,7 @@ del servidor.
 
 ---
 
-## 3. Usuario de sistema, rol y base de datos
+## 4. Usuario de sistema, rol y base de datos
 
 ```bash
 adduser --system --group --home /srv/wellbros --shell /bin/bash wellbros
@@ -168,9 +241,9 @@ PGPASSWORD="$DBPASS" psql -h localhost -U wellbros_user -d wellbros \
 
 ---
 
-## 4. Primera instalación
+## 5. Primera instalación
 
-### 4.1 Directorios
+### 5.1 Directorios
 
 ```bash
 mkdir -p /srv/wellbros/{app,shared,bin,backups/{daily,weekly,monthly,pre-deploy}}
@@ -189,7 +262,7 @@ chmod 750 /srv/wellbros
     └── pre-deploy/               volcado previo a cada despliegue
 ```
 
-### 4.2 El archivo `.env`
+### 5.2 El archivo `.env`
 
 > **SIN COMENTARIOS AL FINAL DE LÍNEA. NUNCA.**
 >
@@ -280,7 +353,7 @@ Ahora rellena los tres marcadores:
 nano /srv/wellbros/shared/.env
 ```
 
-- `PON_AQUI_LA_CONTRASENA_DE_LA_BASE` → la que generaste en §3 (`echo "$DBPASS"`).
+- `PON_AQUI_LA_CONTRASENA_DE_LA_BASE` → la que generaste en §4 (`echo "$DBPASS"`).
 - `PON_AQUI_EL_SECRETO_DE_SESION` → `openssl rand -base64 32` (ejecútalo en otra
   terminal y pega el resultado).
 - `PON_AQUI_LA_CLAVE_DE_RESEND` → la clave del panel de Resend.
@@ -292,7 +365,7 @@ grep -n 'PON_AQUI' /srv/wellbros/shared/.env          # no debe imprimir nada
 grep -nE '^[A-Z_]+=.*[^ ]\s+#' /srv/wellbros/shared/.env   # no debe imprimir nada
 ```
 
-### 4.3 El archivo `.pgpass`
+### 5.3 El archivo `.pgpass`
 
 Los respaldos (`backup.sh`, `deploy.sh`) usan `pg_dump`, que **no entiende
 `DATABASE_URL`**: esa cadena lleva el parámetro `?schema=public`, que es de
@@ -319,7 +392,7 @@ sudo -u wellbros -H env PGHOST=localhost PGUSER=wellbros_user \
   pg_dump -Fc -f /tmp/prueba.dump wellbros && echo "pg_dump OK" && rm -f /tmp/prueba.dump
 ```
 
-### 4.4 Clonar el repositorio **como el usuario `wellbros`**
+### 5.4 Clonar el repositorio **como el usuario `wellbros`**
 
 ```bash
 sudo -u wellbros -H git clone https://github.com/pacocorona/wellbros.git /srv/wellbros/app
@@ -340,7 +413,7 @@ sudo -u wellbros -H git clone https://github.com/pacocorona/wellbros.git /srv/we
 > `/srv/wellbros/.ssh/id_ed25519` (dueño `wellbros`, `chmod 600`) y clona por
 > SSH (`git@github.com:pacocorona/wellbros.git`).
 
-### 4.5 Instalar, migrar, sembrar y compilar
+### 5.5 Instalar, migrar, sembrar y compilar
 
 Todo esto va **como `wellbros` y con el `.env` ya cargado en el entorno**:
 
@@ -407,7 +480,7 @@ sudo -u wellbros -H env PGHOST=localhost PGUSER=wellbros_user psql -d wellbros -
 
 ---
 
-## 5. Scripts de operación y entrada de sudoers
+## 6. Scripts de operación y entrada de sudoers
 
 ```bash
 install -m 750 -o wellbros -g wellbros /srv/wellbros/app/deploy/bin/deploy.sh /srv/wellbros/bin/
@@ -447,7 +520,7 @@ existan.
 
 ---
 
-## 6. Servicios
+## 7. Servicios
 
 ```bash
 install -m 644 /srv/wellbros/app/deploy/systemd/wellbros.service        /etc/systemd/system/
@@ -489,7 +562,7 @@ systemctl show wellbros-worker -p Environment
 Qué mirar en esa salida:
 
 - `EMAIL_DRIVER=resend`, **exactamente eso**. Si ves `resend # console|resend`
-  o cualquier cosa después de la palabra, tienes el problema de §4.2: no saldrá
+  o cualquier cosa después de la palabra, tienes el problema de §5.2: no saldrá
   ningún correo y la cola dirá que todo se envió.
 - `RESEND_FROM=Wellbros <notificaciones@wellbrosproperties.lat>`, **sin comillas
   alrededor** (systemd las quita al leer el archivo; si las ves, sobran en el
@@ -502,7 +575,7 @@ Qué mirar en esa salida:
 
 ---
 
-## 7. Nginx y certificado
+## 8. Nginx y certificado
 
 ```bash
 cp /srv/wellbros/app/deploy/nginx/wellbros.conf /etc/nginx/sites-available/wellbros.conf
@@ -547,7 +620,7 @@ certbot renew --dry-run
 ```
 
 > HSTS queda **desactivado a propósito**. La línea está comentada en
-> `wellbros.conf` con la explicación de cuándo activarla (§13).
+> `wellbros.conf` con la explicación de cuándo activarla (§14).
 
 > **A partir de aquí, `/etc/nginx/sites-available/wellbros.conf` ya NO es igual
 > al del repositorio**: certbot le añadió el bloque 443 y la redirección.
@@ -558,7 +631,7 @@ certbot renew --dry-run
 
 ---
 
-## 8. Respaldos automáticos
+## 9. Respaldos automáticos
 
 ```bash
 printf '%s\n' \
@@ -604,7 +677,7 @@ Un respaldo que nunca se ha restaurado no es un respaldo: es un archivo.
 
 ---
 
-## 9. Cortafuegos y endurecimiento
+## 10. Cortafuegos y endurecimiento
 
 ```bash
 ufw default deny incoming
@@ -632,16 +705,16 @@ ss -ltnp | grep 5432                                                  # solo 127
 
 ---
 
-## 10. Primer acceso y prueba de correo de extremo a extremo
+## 11. Primer acceso y prueba de correo de extremo a extremo
 
-### 10.1 Entrar
+### 11.1 Entrar
 
 1. Abre `https://wellbrosproperties.lat/login`.
 2. Correo `ibuenfil@hotmail.com`, contraseña `WellBros_2026.`
 3. La aplicación **debe exigir el cambio de contraseña** antes de dejar hacer
    nada más. Si no lo pide, avisa: algo no se sembró como debía.
 
-### 10.2 Enviar un correo de verdad, sin molestar a nadie
+### 11.2 Enviar un correo de verdad, sin molestar a nadie
 
 Resend tiene **direcciones de simulación** que aceptan el envío y fingen el
 desenlace, sin buzón real detrás:
@@ -710,7 +783,7 @@ journalctl -u wellbros-worker -n 30 --no-pager
 
 Ojo con lo que significa el resultado: Resend **acepta** el envío —la fila queda
 igualmente en `SENT`, con identificador— y el rebote ocurre **después**. **La
-aplicación no se entera**, porque el webhook todavía no existe (§13): el rebote
+aplicación no se entera**, porque el webhook todavía no existe (§14): el rebote
 se ve en el panel de Resend, no aquí. Es el comportamiento esperado hoy, y
 conviene verlo una vez para no confundirlo con un fallo.
 
@@ -719,12 +792,12 @@ aplicación. No los borres: la fila del aviso apunta a ellos con una clave
 foránea `ON DELETE RESTRICT`, así que el borrado fallaría —y el historial de
 envíos debe conservarse.
 
-### 10.3 Si algo no cuadra
+### 11.3 Si algo no cuadra
 
 | Síntoma | Causa casi segura |
 | --- | --- |
 | La fila se queda en `PENDING` | El worker no está corriendo: `systemctl status wellbros-worker`. |
-| `status = SENT` pero no llega nada, ni aparece en el panel de Resend | `EMAIL_DRIVER` no vale exactamente `resend` (§4.2). Compruébalo con `systemctl show wellbros-worker -p Environment` y mira si hay archivos en `/srv/wellbros/app/.tmp/emails/`: si los hay, está usando el adaptador de consola. |
+| `status = SENT` pero no llega nada, ni aparece en el panel de Resend | `EMAIL_DRIVER` no vale exactamente `resend` (§5.2). Compruébalo con `systemctl show wellbros-worker -p Environment` y mira si hay archivos en `/srv/wellbros/app/.tmp/emails/`: si los hay, está usando el adaptador de consola. |
 | `last_error` con `403` | El remitente no está verificado. `RESEND_FROM` tiene que ir en el dominio **raíz** (`@wellbrosproperties.lat`), que es el que está dado de alta. |
 | `last_error` con `422` | El `RESEND_FROM` está mal formado (comillas de más, `<` o `>` perdidos). |
 | `last_error` con `429` o `daily_quota_exceeded` | Límite del plan gratuito (100 correos al día). El worker lo reintenta solo, con espera creciente. |
@@ -732,7 +805,7 @@ envíos debe conservarse.
 
 ---
 
-## 11. Despliegues posteriores
+## 12. Despliegues posteriores
 
 ```bash
 sudo -u wellbros /srv/wellbros/bin/deploy.sh
@@ -749,7 +822,7 @@ buscarla a mano.
 
 ---
 
-## 12. Diagnóstico rápido
+## 13. Diagnóstico rápido
 
 ```bash
 systemctl status wellbros wellbros-worker --no-pager
@@ -770,7 +843,7 @@ sudo -u wellbros -H env PGHOST=localhost PGUSER=wellbros_user psql -d wellbros -
 
 ---
 
-## 13. Pendiente — **no hacer todavía**
+## 14. Pendiente — **no hacer todavía**
 
 ### Webhook de Resend
 
