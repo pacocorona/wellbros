@@ -33,7 +33,7 @@ fi
 
 if [ ! -r "$ENV_FILE" ]; then
   echo "ERROR: falta $ENV_FILE, o el usuario wellbros no puede leerlo." >&2
-  echo "       Contenido listo para pegar en deploy/README.md §4.2." >&2
+  echo "       Contenido listo para pegar en deploy/README.md §5.2." >&2
   echo "       Debe quedar: chown wellbros:wellbros y chmod 600." >&2
   exit 1
 fi
@@ -80,7 +80,7 @@ if [ ! -r "$PGPASSFILE" ]; then
   echo "ERROR: falta $PGPASSFILE (o no se puede leer)." >&2
   echo "       Sin él pg_dump pide contraseña por teclado: en un despliegue" >&2
   echo "       desatendido eso es un cuelgue o un fallo sin explicación." >&2
-  echo "       Se crea en deploy/README.md §4.3." >&2
+  echo "       Se crea en deploy/README.md §5.3." >&2
   exit 1
 fi
 
