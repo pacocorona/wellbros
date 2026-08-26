@@ -28,6 +28,7 @@ import {
   enqueueNotification,
 } from "@/lib/notifications/dispatch";
 import type { WeekRef } from "@/lib/notifications/types";
+import { publicarCambio } from "@/server/notifications/bus";
 
 import {
   AdminError,
@@ -156,7 +157,7 @@ export async function openWeeks({
   const batchId = randomUUID();
   const fechas = viernes.map(fechaCivil);
 
-  return db.$transaction(async (tx) => {
+  const abierto = await db.$transaction(async (tx) => {
     const existentes = await tx.weekSlot.findMany({
       where: { propertyId: propiedad.id, startDate: { in: fechas } },
       select: { startDate: true },
@@ -252,6 +253,13 @@ export async function openWeeks({
       windowRuleLabel,
     };
   });
+
+  // Calendario en vivo, tras el commit. Solo si de verdad apareció algo: una
+  // tanda idempotente que no creó ninguna semana no cambió nada en pantalla y
+  // no hay por qué hacer recargar a todo el mundo.
+  if (abierto.created > 0) publicarCambio(abierto.propertyId);
+
+  return abierto;
 }
 
 // ═════════════════════════════════════════════════════ cerrar semana
@@ -306,7 +314,7 @@ export async function closeWeek({
   assertSuperuser(actor);
   const datos = parseOrThrow(cerrarSemanaSchema, { slotId, force, reason });
 
-  return db.$transaction(async (tx) => {
+  const cerrada = await db.$transaction(async (tx) => {
     // Bloqueo de la fila del slot: serializa dos cierres simultáneos y el par
     // cerrar/reabrir. OJO: no basta contra una reserva concurrente, porque el
     // INSERT en `reservations` no toca esta fila; el servicio de reservas debe
@@ -491,6 +499,12 @@ export async function closeWeek({
       notified,
     };
   });
+
+  // Calendario en vivo, tras el commit. Si la semana ya estaba cerrada no
+  // cambió nada y no se avisa.
+  if (!cerrada.alreadyClosed) publicarCambio(cerrada.propertyId);
+
+  return cerrada;
 }
 
 // ════════════════════════════════════════════════════ reabrir semana
@@ -523,7 +537,7 @@ export async function reopenWeek({
   assertSuperuser(actor);
   const id = parseOrThrow(uuidSchema, slotId);
 
-  return db.$transaction(async (tx) => {
+  const reabierta = await db.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT id FROM week_slots WHERE id = ${id}::uuid FOR UPDATE`;
 
     const slot = await tx.weekSlot.findUnique({
@@ -596,6 +610,11 @@ export async function reopenWeek({
 
     return { ...base, alreadyOpen: false, notified };
   });
+
+  // Calendario en vivo, tras el commit. Si ya estaba abierta, nada cambió.
+  if (!reabierta.alreadyOpen) publicarCambio(reabierta.propertyId);
+
+  return reabierta;
 }
 
 // ══════════════════════════════════════════════════════ internos

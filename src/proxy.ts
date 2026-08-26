@@ -39,10 +39,23 @@ const SESSION_COOKIE_NAME = "wellbros_session";
 const PUBLIC_PATHS = new Set(["/login", "/api/health"]);
 
 /**
- * Prefijos públicos. Los webhooks de Resend llegan de fuera, sin cookie: se
- * autentican con la firma de Svix en su propio manejador.
+ * Prefijos públicos (coincidencia por PREFIJO, no exacta).
+ *
+ * · `/api/webhooks/` — los webhooks de Resend llegan de fuera, sin cookie: se
+ *   autentican con la firma de Svix en su propio manejador.
+ *
+ * · `/invitacion/` — el enlace del correo de alta lo abre alguien que por
+ *   definición NO tiene sesión todavía: viene a ponerse su primera contraseña.
+ *   Sin esta entrada, el enlace rebota a /login, y allí no puede hacer nada
+ *   porque aún no tiene contraseña que escribir: la invitación queda muerta con
+ *   un síntoma engañoso («me pide entrar y no sé la contraseña»). El token va
+ *   en la ruta y lo valida `redeemInvitation()` contra el hash guardado, que es
+ *   quien de verdad autoriza; esto solo deja llegar la petición.
+ *
+ *   Ojo: el prefijo lleva la barra final a propósito. Sin ella, `/invitacionX`
+ *   —o cualquier ruta futura que empiece por esas letras— también entraría.
  */
-const PUBLIC_PREFIXES = ["/api/webhooks/"];
+const PUBLIC_PREFIXES = ["/api/webhooks/", "/invitacion/"];
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;

@@ -27,6 +27,7 @@ import { writeAudit } from "@/lib/audit";
 import { isWeekBookable } from "@/lib/booking-window";
 import type { Db } from "@/lib/db";
 import { activeUserIds, enqueueNotification } from "@/lib/notifications/dispatch";
+import { publicarCambio } from "@/server/notifications/bus";
 
 import {
   assertUuid,
@@ -96,9 +97,16 @@ export async function cancelReservation(
 
   assertUuid(reservationId, new ReservationError("RESERVATION_NOT_FOUND"));
 
-  return db.$transaction(async (tx) => cancelarEnTransaccion(tx, input), {
-    timeout: TX_TIMEOUT_MS,
-  });
+  const cancelada = await db.$transaction(
+    async (tx) => cancelarEnTransaccion(tx, input),
+    { timeout: TX_TIMEOUT_MS },
+  );
+
+  // Calendario en vivo, ya con la transacción confirmada: la semana vuelve a
+  // estar libre y quien la esté mirando debe verlo sin recargar.
+  publicarCambio(cancelada.propertyId);
+
+  return cancelada;
 }
 
 async function cancelarEnTransaccion(

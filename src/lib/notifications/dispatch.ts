@@ -23,6 +23,11 @@
  */
 
 import type { Prisma } from "@/generated/prisma/client";
+// La política de «a quién se le deja de escribir» vive junto al webhook que la
+// alimenta, para que la lista de avisos prescindibles se escriba UNA vez: quien
+// barre la cola tras un rebote y quien decide si encolar deben coincidir
+// siempre, y dos listas paralelas divergirían al primer evento nuevo.
+import { isEssentialNotification } from "@/server/notifications/webhook";
 
 import { consoleEmailChannel } from "./channels/email-console";
 import { resendEmailChannel } from "./channels/email-resend";
@@ -157,14 +162,49 @@ type DestinatarioFila = {
   fullName: string;
   phone: string | null;
   whatsappOptIn: boolean;
+  /** Fecha del rebote PERMANENTE, si lo hubo. La pone el webhook de Resend. */
+  emailBouncedAt: Date | null;
+  /** Cuándo marcó los avisos como correo no deseado, si lo hizo. */
+  emailComplainedAt: Date | null;
 };
 
-/** Dirección de contacto para un canal, o null si esa persona no lo tiene. */
+/**
+ * Dirección de contacto para un canal, o `null` si a esa persona no se le puede
+ * —o no se le debe— escribir por ahí.
+ *
+ * AQUÍ SE APLICA LO QUE INFORMÓ EL PROVEEDOR. El webhook de Resend marca la
+ * ficha del usuario cuando su dirección rebota de forma permanente o cuando se
+ * queja; sin esta comprobación esas marcas no servirían de nada y se seguiría
+ * encolando correo a un buzón que no existe, con dos consecuencias caras:
+ * la reputación del dominio se degrada con cada rebote, y el trabajador gasta
+ * sus reintentos en un envío que no puede salir bien.
+ *
+ * Las dos marcas NO pesan igual:
+ *
+ *  · Rebote permanente → la dirección no existe. No se le manda NADA, ni
+ *    siquiera lo esencial: no hay a dónde. Guardar la fila solo produciría un
+ *    fallo diferido.
+ *
+ *  · Queja → la dirección funciona y la persona la lee; lo que dijo es que no
+ *    quiere el movimiento de la casa. Se le siguen mandando los avisos
+ *    ESENCIALES (la invitación, el enlace para recuperar la contraseña), porque
+ *    tragárselos la dejaría fuera de su propia cuenta sin que nadie se entere.
+ *    Ver `NON_ESSENTIAL_EVENT_TYPES` en `@/server/notifications/webhook`.
+ *
+ * Nada de esto toca a WhatsApp: las marcas son del correo.
+ */
 function addressFor(
   channel: NotificationChannelKey,
   user: DestinatarioFila,
+  eventType: NotificationEventType,
 ): string | null {
-  if (channel === "EMAIL") return user.email;
+  if (channel === "EMAIL") {
+    if (user.emailBouncedAt !== null) return null;
+    if (user.emailComplainedAt !== null && !isEssentialNotification(eventType)) {
+      return null;
+    }
+    return user.email;
+  }
   // WhatsApp exige teléfono en E.164 y consentimiento explícito.
   return user.whatsappOptIn && user.phone ? user.phone : null;
 }
@@ -194,6 +234,8 @@ export async function enqueueNotification<E extends NotificationEventType>(
       fullName: true,
       phone: true,
       whatsappOptIn: true,
+      emailBouncedAt: true,
+      emailComplainedAt: true,
     },
   });
   if (usuarios.length === 0) return 0;
@@ -204,7 +246,7 @@ export async function enqueueNotification<E extends NotificationEventType>(
   const filas: Prisma.NotificationOutboxCreateManyInput[] = [];
   for (const usuario of usuarios) {
     for (const canal of canales) {
-      const direccion = addressFor(canal.key, usuario);
+      const direccion = addressFor(canal.key, usuario, input.eventType);
       if (!direccion) continue;
 
       filas.push({

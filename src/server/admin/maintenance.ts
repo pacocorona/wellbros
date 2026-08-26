@@ -16,6 +16,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { writeAudit, type AuditDetails } from "@/lib/audit";
 import { addDaysISO, agruparDiasEnRangos, weekStartOf } from "@/lib/calendar-grid";
 import type { Db } from "@/lib/db";
+import { publicarCambio } from "@/server/notifications/bus";
 
 import {
   AdminError,
@@ -250,6 +251,10 @@ export async function createMaintenanceNote({
     }),
   );
 
+  // Calendario en vivo, tras el commit: la nota se pinta en la retícula de
+  // TODOS, así que todos tienen que enterarse sin recargar.
+  publicarCambio(creada.propertyId);
+
   return aFila(creada);
 }
 
@@ -342,6 +347,10 @@ export async function createMaintenanceNotesForDays({
     return filas;
   });
 
+  // Un solo aviso por operación aunque la selección haya dado varios tramos:
+  // el evento dice «mira otra vez esta propiedad», no cuántas notas hay.
+  publicarCambio(datos.propertyId);
+
   return creadas.map(aFila);
 }
 
@@ -422,6 +431,10 @@ export async function updateMaintenanceNote({
     return fila;
   });
 
+  // Calendario en vivo: editar una nota mueve o reescribe lo que se ve en la
+  // retícula, igual que crearla.
+  publicarCambio(actualizada.propertyId);
+
   return aFila(actualizada);
 }
 
@@ -474,6 +487,9 @@ export async function deleteMaintenanceNote({
       },
     });
   });
+
+  // Calendario en vivo: la marca desaparece de la retícula de todos.
+  publicarCambio(actual.propertyId);
 
   // Se devuelve el retrato de lo borrado para que la interfaz pueda decir qué
   // desapareció sin volver a consultar.

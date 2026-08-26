@@ -14,7 +14,16 @@
  */
 
 import { useEffect, useState, useTransition } from "react";
-import { Check, Copy, Loader2, TriangleAlert } from "lucide-react";
+import {
+  Check,
+  Copy,
+  KeyRound,
+  Loader2,
+  Mail,
+  MailCheck,
+  Send,
+  TriangleAlert,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -43,12 +52,49 @@ import {
   cambiarActivacionUsuarioAction,
   crearUsuarioAction,
   listarReservasFuturasAction,
+  reenviarInvitacionAction,
+  type CrearUsuarioSalida,
 } from "@/server/actions/admin-actions";
-import type { AdminUserRow, FutureReservationRef } from "@/server/admin/users";
+import type {
+  AdminUserRow,
+  FutureReservationRef,
+  UserDelivery,
+} from "@/server/admin/users";
 
 const ROLES: ReadonlyArray<{ label: string; value: UserRole }> = [
   { label: "Usuaria o usuario", value: "USER" },
   { label: "Superusuaria", value: "SUPERUSER" },
+];
+
+/**
+ * Las dos formas de entregar la primera llave, con la diferencia explicada
+ * donde se elige y no en la documentación.
+ *
+ * El orden importa: la invitación va primera y es la marcada por omisión
+ * porque es la buena. La contraseña temporal sigue existiendo para el caso real
+ * —alguien sin correo, un envío que rebota— pero obliga a dictar por teléfono o
+ * WhatsApp una contraseña que a partir de ese momento conocen dos personas.
+ */
+const ENTREGAS: ReadonlyArray<{
+  value: UserDelivery;
+  titulo: string;
+  detalle: string;
+  Icono: typeof Mail;
+}> = [
+  {
+    value: "INVITACION",
+    titulo: "Enviar invitación por correo",
+    detalle:
+      "Recibe un enlace que caduca en 48 horas y sirve una sola vez. Elige su propia contraseña: nadie más llega a conocerla.",
+    Icono: Mail,
+  },
+  {
+    value: "CONTRASENA_TEMPORAL",
+    titulo: "Generar contraseña temporal",
+    detalle:
+      "La verás una sola vez y tendrás que dictarla. Hasta que la cambie, la conocen dos personas. Úsalo solo si no tiene correo o el envío falla.",
+    Icono: KeyRound,
+  },
 ];
 
 // ═════════════════════════════════════════════════════ alta y edición
@@ -77,9 +123,15 @@ export function UserDialog({ usuario, abierto, onAbiertoChange }: UserDialogProp
   const [whatsapp, setWhatsapp] = useState(usuario?.whatsappOptIn ?? false);
   const [rol, setRol] = useState<UserRole>(usuario?.role ?? "USER");
 
+  const [entrega, setEntrega] = useState<UserDelivery>("INVITACION");
+
   const [error, setError] = useState<string | null>(null);
-  /** Contraseña temporal recién creada: se ve una sola vez, aquí. */
-  const [temporal, setTemporal] = useState<string | null>(null);
+  /**
+   * Resultado del alta. Mientras no sea nulo, el diálogo deja de ser un
+   * formulario y pasa a ser el acuse de recibo: o la contraseña temporal —que
+   * no vuelve a mostrarse jamás— o la confirmación del correo enviado.
+   */
+  const [creada, setCreada] = useState<CrearUsuarioSalida | null>(null);
   const [enviando, iniciar] = useTransition();
 
   // El consentimiento de WhatsApp sin teléfono no significa nada, y el servidor
@@ -101,6 +153,7 @@ export function UserDialog({ usuario, abierto, onAbiertoChange }: UserDialogProp
           phone: telefonoLimpio || null,
           whatsappOptIn: puedeWhatsapp && whatsapp,
           role: rol,
+          delivery: entrega,
         });
 
         if (!resultado.ok) {
@@ -108,13 +161,10 @@ export function UserDialog({ usuario, abierto, onAbiertoChange }: UserDialogProp
           return;
         }
 
-        if (resultado.data.temporaryPassword) {
-          // No se cierra: la contraseña temporal no vuelve a mostrarse nunca.
-          setTemporal(resultado.data.temporaryPassword);
-          return;
-        }
-
-        onAbiertoChange(false);
+        // Nunca se cierra solo tras un alta: la contraseña temporal no vuelve a
+        // mostrarse nunca, y la confirmación del correo es la única señal de si
+        // el aviso salió de verdad o se quedó en la cola.
+        setCreada(resultado.data);
         return;
       }
 
@@ -137,10 +187,11 @@ export function UserDialog({ usuario, abierto, onAbiertoChange }: UserDialogProp
   return (
     <Dialog open={abierto} onOpenChange={onAbiertoChange}>
       <DialogContent className="sm:max-w-md">
-        {temporal ? (
-          <ContrasenaTemporal
+        {creada ? (
+          <AltaHecha
+            resultado={creada}
             nombre={nombre}
-            contrasena={temporal}
+            correo={correo}
             onListo={() => onAbiertoChange(false)}
           />
         ) : (
@@ -257,12 +308,10 @@ export function UserDialog({ usuario, abierto, onAbiertoChange }: UserDialogProp
             </div>
 
             {esAlta ? (
-              <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-                Se generará una <strong>contraseña temporal</strong> que verás una
-                sola vez al guardar. Entrégala por un canal seguro. El alta por
-                invitación con enlace de correo aún no está disponible.
-              </p>
-            ) : null}
+              <ElectorDeEntrega valor={entrega} onCambio={setEntrega} />
+            ) : (
+              <Acceso usuario={usuario} />
+            )}
 
             <MensajeError texto={error} />
 
@@ -279,6 +328,230 @@ export function UserDialog({ usuario, abierto, onAbiertoChange }: UserDialogProp
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Elección de cómo recibe la cuenta su primera llave.
+ *
+ * Va con radios nativos y no con un combo: son dos opciones que hay que
+ * comparar, y un combo esconde la que no está seleccionada justo cuando la
+ * diferencia entre las dos es lo único que hay que entender. El texto de cada
+ * una dice lo que de verdad cambia —quién acaba conociendo la contraseña—, no
+ * cómo funciona por dentro.
+ */
+function ElectorDeEntrega({
+  valor,
+  onCambio,
+}: {
+  valor: UserDelivery;
+  onCambio: (valor: UserDelivery) => void;
+}) {
+  return (
+    <fieldset className="grid gap-2">
+      <legend className="mb-1.5 text-sm font-medium">Cómo entra por primera vez</legend>
+
+      {ENTREGAS.map(({ value, titulo, detalle, Icono }) => {
+        const marcada = valor === value;
+        return (
+          <label
+            key={value}
+            data-marcada={marcada}
+            className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-border p-3 transition-colors data-[marcada=true]:border-[var(--wb-accent-ink)] data-[marcada=true]:bg-[var(--wb-accent-soft)] has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50"
+          >
+            {/* El nombre y la descripción se enlazan EXPLÍCITAMENTE por id: con
+                solo la etiqueta envolvente, el lector de pantalla anuncia el
+                valor crudo del radio («INVITACION») en vez de la frase, y la
+                explicación —que es lo único que distingue una opción de otra—
+                no se lee en absoluto. */}
+            <input
+              type="radio"
+              name="entrega"
+              value={value}
+              checked={marcada}
+              onChange={() => onCambio(value)}
+              aria-labelledby={`entrega-${value}-titulo`}
+              aria-describedby={`entrega-${value}-detalle`}
+              className="mt-0.5 size-4 shrink-0 accent-[var(--wb-accent-ink)]"
+            />
+            <span className="grid gap-0.5">
+              <span
+                id={`entrega-${value}-titulo`}
+                className="flex items-center gap-1.5 text-sm font-medium"
+              >
+                <Icono className="size-4 shrink-0" aria-hidden />
+                {titulo}
+              </span>
+              <span
+                id={`entrega-${value}-detalle`}
+                className="text-xs text-muted-foreground"
+              >
+                {detalle}
+              </span>
+            </span>
+          </label>
+        );
+      })}
+    </fieldset>
+  );
+}
+
+/**
+ * Estado del acceso de una cuenta que ya existe, con el reenvío de invitación.
+ *
+ * Solo aparece cuando la persona todavía no ha canjeado su enlace. A quien ya
+ * tiene contraseña propia no se le reinvita —el servidor lo rechaza— porque un
+ * enlace de alta sobre una cuenta abierta es, sin decirlo, un cambio de
+ * contraseña hecho por otra persona. Eso será la recuperación de contraseña,
+ * cuando exista, y tendrá su propio nombre.
+ */
+function Acceso({ usuario }: { usuario: AdminUserRow }) {
+  const [estado, setEstado] = useState<
+    | { tipo: "ocioso" }
+    | { tipo: "listo"; notificados: number; caducaEn: string }
+    | { tipo: "error"; mensaje: string }
+  >({ tipo: "ocioso" });
+  const [enviando, iniciar] = useTransition();
+
+  if (!usuario.pendingInvitation) {
+    return (
+      <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+        Esta persona ya eligió su contraseña y entra por su cuenta. Nadie más la
+        conoce, tampoco nosotros. Todavía no hay forma de recuperarla desde aquí:
+        la recuperación de contraseña está por hacerse.
+      </p>
+    );
+  }
+
+  function reenviar() {
+    iniciar(async () => {
+      const resultado = await reenviarInvitacionAction(usuario.id);
+      setEstado(
+        resultado.ok
+          ? {
+              tipo: "listo",
+              notificados: resultado.data.notified,
+              caducaEn: resultado.data.expiresInLabel,
+            }
+          : { tipo: "error", mensaje: resultado.message },
+      );
+    });
+  }
+
+  return (
+    <div className="grid gap-2 rounded-lg bg-muted/60 px-3 py-2.5">
+      <p className="text-xs text-muted-foreground">
+        <strong className="font-medium text-foreground">
+          Todavía no ha entrado.
+        </strong>{" "}
+        Se le envió una invitación y aún no la ha canjeado. Si el enlace caducó o
+        el correo se perdió, envíale uno nuevo: el anterior deja de servir en ese
+        mismo momento.
+      </p>
+
+      {estado.tipo === "listo" ? (
+        <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <MailCheck className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+          <span>
+            {estado.notificados > 0
+              ? `Enlace nuevo en camino a ${usuario.email}. Caduca en ${estado.caducaEn}.`
+              : "El enlace se generó, pero el canal de correo está apagado y no salió ningún mensaje. Enciéndelo en la configuración de avisos."}
+          </span>
+        </p>
+      ) : null}
+
+      {estado.tipo === "error" ? (
+        <p role="alert" className="text-xs text-destructive">
+          {estado.mensaje}
+        </p>
+      ) : null}
+
+      <div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={enviando}
+          onClick={reenviar}
+        >
+          {enviando ? <Loader2 className="animate-spin" aria-hidden /> : <Send aria-hidden />}
+          {estado.tipo === "listo" ? "Enviar otro enlace" : "Reenviar invitación"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Acuse de recibo del alta. Es la única pantalla donde se ve la contraseña
+ * temporal, y la única que dice si el correo salió de verdad.
+ */
+function AltaHecha({
+  resultado,
+  nombre,
+  correo,
+  onListo,
+}: {
+  resultado: CrearUsuarioSalida;
+  nombre: string;
+  correo: string;
+  onListo: () => void;
+}) {
+  if (resultado.temporaryPassword) {
+    return (
+      <ContrasenaTemporal
+        nombre={nombre}
+        contrasena={resultado.temporaryPassword}
+        onListo={onListo}
+      />
+    );
+  }
+
+  // Cero avisos encolados con entrega por invitación significa que el canal de
+  // correo está apagado en la configuración. La cuenta existe y el enlace
+  // también, pero NADIE lo va a recibir: callarlo dejaría a la administración
+  // esperando a alguien que no puede entrar.
+  const salioElCorreo = resultado.notified > 0;
+
+  return (
+    <div className="grid gap-4">
+      <DialogHeader>
+        <DialogTitle>
+          {salioElCorreo ? "Invitación enviada" : "Cuenta creada, correo sin enviar"}
+        </DialogTitle>
+        <DialogDescription>
+          {salioElCorreo ? (
+            <>
+              {nombre} recibirá en <strong>{correo}</strong> un enlace para elegir
+              su contraseña. Caduca en 48 horas y sirve una sola vez; si se le
+              pasa, puedes reenviárselo desde esta misma pantalla.
+            </>
+          ) : (
+            <>
+              La cuenta de {nombre} quedó creada, pero el canal de correo está
+              apagado y no salió ningún mensaje. Enciéndelo en la configuración de
+              avisos y reenvíale la invitación desde la ficha de la cuenta.
+            </>
+          )}
+        </DialogDescription>
+      </DialogHeader>
+
+      {salioElCorreo ? null : (
+        <p className="flex items-start gap-2 rounded-lg border border-[var(--wb-closed-bd)] bg-[var(--wb-closed-bg)] p-3 text-sm text-[var(--wb-closed-fg)]">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <span>
+            Hasta que reciba el enlace, esta persona no puede entrar: su cuenta
+            nace sin contraseña.
+          </span>
+        </p>
+      )}
+
+      <DialogFooter>
+        <Button type="button" onClick={onListo}>
+          Listo
+        </Button>
+      </DialogFooter>
+    </div>
   );
 }
 

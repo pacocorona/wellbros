@@ -85,6 +85,10 @@ const GRUPOS: Readonly<Record<string, readonly AuditAction[]>> = {
     "MAINTENANCE_NOTE_DELETED",
     "BOOKING_POLICY_UPDATED",
   ],
+  // Correo. Es la única respuesta escrita a «¿por qué esta persona no se
+  // entera de nada?»: la informa el webhook de Resend, no un humano, así que
+  // estas filas no tienen actor.
+  correo: ["EMAIL_BOUNCED", "EMAIL_COMPLAINED", "EMAIL_DELIVERY_FAILED"],
   accesos: ["LOGIN_SUCCEEDED", "LOGIN_FAILED", "LOGOUT"],
 };
 

@@ -32,6 +32,7 @@ import {
   superuserIds,
 } from "@/lib/notifications/dispatch";
 import type { GrantedDay, WeekRef } from "@/lib/notifications/types";
+import { publicarCambio } from "@/server/notifications/bus";
 
 import { grantError, translateDatabaseError } from "./errors";
 
@@ -365,9 +366,15 @@ export async function createDayGrants(
     );
   }
 
-  return db.$transaction(async (tx) => {
+  // La propiedad tocada se anota en un objeto y no en una variable suelta para
+  // poder avisar al calendario en vivo DESPUÉS del commit (ver el final de la
+  // función). Se rellena dentro, se usa fuera.
+  const tocada: { propertyId?: string } = {};
+
+  const resultado = await db.$transaction(async (tx) => {
     const ctx = await loadReservationContext(tx, reservationId);
     assertOwnerCanManage(ctx, actor);
+    tocada.propertyId = ctx.propertyId;
 
     const receptor = await tx.user.findUnique({
       where: { id: granteeUserId },
@@ -518,4 +525,10 @@ export async function createDayGrants(
 
     return { grantBatchId, grants, notified };
   });
+
+  // Calendario en vivo, con la cesión ya confirmada: los días cedidos cambian
+  // de iniciales en la retícula de TODOS, no solo en la de los dos implicados.
+  if (tocada.propertyId) publicarCambio(tocada.propertyId);
+
+  return resultado;
 }

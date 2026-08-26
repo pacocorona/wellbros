@@ -21,6 +21,7 @@ import {
   superuserIds,
 } from "@/lib/notifications/dispatch";
 import type { GrantedDay } from "@/lib/notifications/types";
+import { publicarCambio } from "@/server/notifications/bus";
 
 import {
   assertOwnerCanManage,
@@ -86,9 +87,14 @@ export async function revokeDayGrants(
   const fechas = normalizeDates(input.dates);
   const hoy = businessTodayISO(now, timeZone);
 
-  return db.$transaction(async (tx) => {
+  // Misma mecánica que en `createDayGrants`: la propiedad se retiene aquí para
+  // avisar al calendario en vivo una vez confirmada la transacción.
+  const tocada: { propertyId?: string } = {};
+
+  const resultado = await db.$transaction(async (tx) => {
     const ctx = await loadReservationContext(tx, reservationId);
     assertOwnerCanManage(ctx, actor);
+    tocada.propertyId = ctx.propertyId;
 
     const pasados = pastDates(fechas, hoy);
     if (pasados.length > 0) {
@@ -231,4 +237,10 @@ export async function revokeDayGrants(
 
     return { batches, grants, notified };
   });
+
+  // Calendario en vivo: los días vuelven al dueño de la semana en la retícula
+  // de todos.
+  if (tocada.propertyId) publicarCambio(tocada.propertyId);
+
+  return resultado;
 }

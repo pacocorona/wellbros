@@ -61,6 +61,19 @@ export const AUDIT_ACTIONS = [
   "MAINTENANCE_NOTE_UPDATED",
   "MAINTENANCE_NOTE_DELETED",
   "BOOKING_POLICY_UPDATED",
+  // Correo — hechos que informa el webhook de Resend.
+  //
+  // La entrega correcta NO se anota: sería una línea por aviso y por persona,
+  // y ahogaría todo lo demás en una bitácora que se lee a ojo. Tampoco el
+  // retraso, que es informativo y suele resolverse solo. Estos tres, en
+  // cambio, son la ÚNICA respuesta a «¿por qué esta persona no se entera de
+  // nada?», que hoy no está escrita en ninguna parte.
+  /** Rebote. Los `details` dicen si fue permanente (dirección quemada) o no. */
+  "EMAIL_BOUNCED",
+  /** Marcó un aviso como correo no deseado: se le dejan de mandar los no esenciales. */
+  "EMAIL_COMPLAINED",
+  /** Resend no consiguió enviarlo (`email.failed`). */
+  "EMAIL_DELIVERY_FAILED",
   // Acceso
   "LOGIN_SUCCEEDED",
   "LOGIN_FAILED",

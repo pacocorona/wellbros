@@ -34,6 +34,7 @@ import {
 import type {
   Availability,
   CalRow,
+  DayCell,
   Segment,
   WeekView,
 } from "@/lib/calendar-grid";
@@ -226,7 +227,7 @@ export interface WeekSegmentProps {
 }
 
 export interface MonthGridProps {
-  /** Mes en pantalla, `yyyy-MM`. Solo se usa para el nombre accesible. */
+  /** Mes en pantalla, `yyyy-MM`. Nombre accesible y días del mes vecino. */
   month: string;
   /** Filas ya construidas con `buildMonthGrid`. */
   rows: CalRow[];
@@ -235,7 +236,40 @@ export interface MonthGridProps {
   isWeekActionable?: (week: WeekView) => boolean;
   /** Oculta la leyenda cuando la página ya la muestra en otro sitio. */
   showLegend?: boolean;
+  /**
+   * Hoy en la zona de negocio, `yyyy-MM-dd`.
+   *
+   * La retícula no lo necesita —sus filas ya vienen marcadas—, pero la vista de
+   * tarjetas sí: la última fila del mes enseña una semana cuyo tramo largo cae
+   * fuera, y ese tramo es el que trae la etiqueta. Sin estos dos datos, esa
+   * única tarjeta diría «En curso» a secas donde las demás dicen «En curso ·
+   * quedan 3 días».
+   */
+  hoyISO?: string;
+  zonaHoraria?: string;
   className?: string;
+}
+
+/**
+ * Props de la vista de tarjetas (móvil). Son las de la retícula MENOS la
+ * leyenda: las dos vistas viven dentro de la misma tarjeta de calendario y esa
+ * leyenda se pinta una sola vez, fuera de la conmutación (ver month-grid.tsx).
+ */
+export type WeekCardsProps = Omit<MonthGridProps, "showLegend">;
+
+/**
+ * Una semana ya reconstruida a partir de sus dos tramos, lista para pintarse
+ * como una sola pieza. La produce `semanasDeLaRejilla` (week-cards.tsx).
+ */
+export interface SemanaEnTarjeta {
+  /** Viernes de inicio: la identidad de la semana. */
+  weekKey: string;
+  week: WeekView;
+  availability: Availability;
+  /** Los SIETE días, viernes→jueves, completados si la retícula la cortó. */
+  days: DayCell[];
+  /** Etiqueta contextual, la misma que lleva el tramo largo en la retícula. */
+  label: string;
 }
 
 export interface LegendProps {

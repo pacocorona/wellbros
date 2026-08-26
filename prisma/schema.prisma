@@ -50,6 +50,24 @@ enum GrantStatus {
   @@map("grant_status")
 }
 
+/// Para qué sirve un token de un solo uso.
+///
+/// POR QUÉ NO SE LLAMA «Invitation» — ni el enum ni la tabla.
+/// El primer uso es la invitación de alta, pero la recuperación de contraseña
+/// necesita EXACTAMENTE lo mismo: 32 bytes aleatorios, guardados solo como
+/// hash, con caducidad, de un solo uso y con los anteriores invalidados al
+/// emitir uno nuevo. Una tabla `invitations` habría obligado a una segunda
+/// tabla gemela —con su segunda copia de la generación, el hasheo, el canje y
+/// sus pruebas— y a partir de ahí las dos habrían divergido en el detalle que
+/// más importa, que es el de seguridad. El propósito es una columna, no un
+/// modelo distinto.
+enum AccessTokenPurpose {
+  INVITACION
+  RESTABLECER_CONTRASENA
+
+  @@map("access_token_purpose")
+}
+
 enum NotifChannel {
   EMAIL
   WHATSAPP
@@ -65,6 +83,36 @@ enum OutboxStatus {
   DEAD
 
   @@map("outbox_status")
+}
+
+/// Qué pasó con el correo DESPUÉS de que Resend lo aceptara.
+///
+/// POR QUÉ UN ENUM NUEVO Y NO MÁS VALORES EN `OutboxStatus`.
+/// `OutboxStatus` describe nuestro INTENTO DE ENVÍO —el ciclo de la cola:
+/// PENDING → SENDING → SENT/FAILED/DEAD— y es lo que consulta el worker
+/// (`WHERE status = 'PENDING'`, el rescate de los SENDING huérfanos). Lo que
+/// cuenta el webhook es otra cosa y en otro eje: el aviso SÍ salió (SENT sigue
+/// siendo cierto y debe seguir siéndolo) y lo que se sabe después es qué hizo
+/// el destinatario con él. Meter DELIVERED o BOUNCED en el mismo enum obligaría
+/// a elegir entre dos verdades simultáneas, borraría la respuesta a «¿llegamos
+/// a entregárselo a Resend?» y pondría al worker a filtrar por estados que no
+/// son suyos. Además `email.delivery_delayed` no es un estado de cola en
+/// absoluto: es una nota al margen que no cambia nada.
+///
+/// Dos ejes, dos columnas: `status` es nuestro, `delivery_state` es del
+/// proveedor.
+enum DeliveryState {
+  DELIVERED
+  /// Retraso temporal en el servidor de destino. Informativo: Resend sigue
+  /// intentándolo por su cuenta y nosotros NO reintentamos nada.
+  DELAYED
+  BOUNCED
+  /// El destinatario lo marcó como correo no deseado.
+  COMPLAINED
+  /// Resend no consiguió enviarlo (`email.failed`).
+  FAILED
+
+  @@map("delivery_state")
 }
 
 enum ReleaseMode {
@@ -87,6 +135,11 @@ enum SuperuserOverride {
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique @db.Citext
+  /// Argon2id, salvo en las cuentas dadas de alta por invitación y que todavía
+  /// no la han canjeado: esas llevan un CENTINELA que no es un hash válido y
+  /// contra el que ninguna contraseña puede verificar (ver SIN_CONTRASENA en
+  /// src/server/admin/users.ts). Nacer sin contraseña utilizable es el punto
+  /// entero de la invitación: la primera que existe la escribe su dueña.
   passwordHash String   @map("password_hash")
   fullName     String   @map("full_name")
   /// E.164 (+52...). Preparado para WhatsApp; nulo mientras no haya número.
@@ -101,10 +154,28 @@ model User {
   /// grupo (app) no deja navegar a ninguna pantalla que no sea
   /// /cambiar-contrasena. Lo apaga `changeOwnPassword`, en su transacción.
   mustChangePassword Boolean @default(false) @map("must_change_password")
+
+  /// Su correo REBOTÓ de forma permanente (la dirección no existe o el dominio
+  /// la rechaza para siempre): a esta persona ya no se le puede escribir.
+  /// Lo escribe el webhook de Resend, nunca la aplicación.
+  ///
+  /// Es un timestamp y no un booleano porque la pregunta que se hace la
+  /// superusuaria cuando alguien no se entera de nada no es «¿rebota?» sino
+  /// «¿desde cuándo?»: con la fecha delante sabe si el problema empezó antes o
+  /// después del aviso que esa persona dice no haber recibido. Nulo = se le
+  /// puede escribir.
+  emailBouncedAt    DateTime? @map("email_bounced_at") @db.Timestamptz(6)
+  /// Marcó uno de nuestros avisos como correo no deseado. A partir de aquí solo
+  /// se le mandan los avisos ESENCIALES: seguir insistiendo con el movimiento
+  /// de la casa quema la reputación del dominio para todos los demás.
+  emailComplainedAt DateTime? @map("email_complained_at") @db.Timestamptz(6)
+
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   sessions          Session[]
+  accessTokens      AccessToken[]      @relation("AccessTokenSubject")
+  accessTokensIssued AccessToken[]     @relation("AccessTokenIssuer")
   slotsCreated      WeekSlot[]         @relation("SlotCreatedBy")
   reservations      Reservation[]      @relation("ReservationOwner")
   reservationsCancelled Reservation[]  @relation("ReservationCancelledBy")
@@ -136,6 +207,53 @@ model Session {
   @@index([userId])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+/// Token de un solo uso para abrir o recuperar una cuenta.
+///
+/// Mismo criterio que `Session`: en la base vive SOLO el SHA-256 del token,
+/// nunca el token. Un volcado de esta tabla no permite entrar como nadie ni
+/// fabricar un enlace válido. Y basta SHA-256 (no Argon2) por el mismo motivo
+/// que allá: no es una contraseña elegida por una persona sino 256 bits
+/// aleatorios, contra los que no hay diccionario; lo que se busca es que el
+/// valor robado de la base no sea reutilizable, no frenar la fuerza bruta.
+///
+/// El ciclo de vida se lee en tres columnas nulas, y cada una responde una
+/// pregunta distinta que a la administración le interesa poder separar:
+///   · `usedAt`       — alguien lo canjeó (y por tanto ya entró).
+///   · `supersededAt` — lo dejamos obsoleto al emitir otro para esa persona y
+///                      propósito. No es lo mismo que caducar ni que usarse.
+///   · `expiresAt`    — se le acabó el plazo sin que nadie lo tocara.
+///
+/// La regla «solo puede haber UN token vigente por persona y propósito» no es
+/// una convención del código: es un índice único PARCIAL sobre
+/// (user_id, purpose) WHERE used_at IS NULL AND superseded_at IS NULL, que
+/// Prisma no sabe expresar y que se crea en la migración. Así, aunque alguien
+/// escribiera mañana un `create` que olvide invalidar los anteriores, la base
+/// lo rechaza en vez de dejar dos enlaces buenos circulando.
+model AccessToken {
+  id        String             @id @default(uuid()) @db.Uuid
+  userId    String             @map("user_id") @db.Uuid
+  purpose   AccessTokenPurpose
+  /// SHA-256 en hexadecimal del token que viaja en el enlace.
+  tokenHash String             @unique @map("token_hash")
+  expiresAt DateTime           @map("expires_at") @db.Timestamptz(6)
+
+  usedAt       DateTime? @map("used_at") @db.Timestamptz(6)
+  supersededAt DateTime? @map("superseded_at") @db.Timestamptz(6)
+
+  /// Quién lo emitió. Nulo en los que nadie pide a mano (una futura
+  /// recuperación de contraseña la inicia la propia persona, sin actor).
+  createdById String?  @map("created_by") @db.Uuid
+  ip          String?  @db.VarChar(64)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user      User  @relation("AccessTokenSubject", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("AccessTokenIssuer", fields: [createdById], references: [id])
+
+  @@index([userId, purpose])
+  @@index([expiresAt])
+  @@map("access_tokens")
 }
 
 // ─────────────────────────────────────────────────────── propiedades
@@ -362,10 +480,25 @@ model NotificationOutbox {
   sentAt            DateTime?    @map("sent_at") @db.Timestamptz(6)
   createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  /// Desenlace informado por el webhook de Resend. Nulo mientras no se sepa
+  /// nada: ni «se entregó» ni «no se entregó», simplemente aún no ha llegado
+  /// ningún aviso del proveedor (o el canal no es correo).
+  deliveryState     DeliveryState? @map("delivery_state")
+  /// Motivo en las palabras del proveedor: el tipo y subtipo del rebote, o la
+  /// razón del fallo. Es lo que hace accionable un BOUNCED —«buzón lleno» y
+  /// «la dirección no existe» piden cosas distintas—.
+  deliveryDetail    String?        @map("delivery_detail")
+  /// Cuándo se supo. No es `sent_at`: entre entregar y rebotar pueden pasar
+  /// días.
+  deliveryUpdatedAt DateTime?      @map("delivery_updated_at") @db.Timestamptz(6)
+
   recipient User @relation(fields: [recipientUserId], references: [id])
 
   @@index([status, scheduledFor, nextAttemptAt])
   @@index([providerMessageId])
+  // Para la pantalla de «avisos que no llegaron», que es el motivo entero de
+  // tener estas columnas.
+  @@index([deliveryState])
   @@map("notification_outbox")
 }
 

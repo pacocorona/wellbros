@@ -33,6 +33,7 @@ import {
 import type { Db } from "@/lib/db";
 import { activeUserIds, enqueueNotification } from "@/lib/notifications/dispatch";
 import type { WeekRef } from "@/lib/notifications/types";
+import { publicarCambio } from "@/server/notifications/bus";
 
 import { ReservationError } from "./errors";
 
@@ -317,10 +318,16 @@ export async function createReservation(
   assertUuid(ownerUserId, new ReservationError("NOT_ALLOWED"));
 
   try {
-    return await db.$transaction(
+    const creada = await db.$transaction(
       async (tx) => crearEnTransaccion(tx, input, ownerUserId),
       { timeout: TX_TIMEOUT_MS },
     );
+    // Calendario en vivo: DESPUÉS del commit, nunca dentro. Un aviso emitido
+    // dentro de la transacción anunciaría una reserva que el rollback puede
+    // deshacer, y todos los navegadores conectados recargarían para ver algo
+    // que no ocurrió.
+    publicarCambio(creada.propertyId);
+    return creada;
   } catch (error) {
     if (error instanceof RechazoDeVentana) {
       // La transacción ya hizo rollback: esta anotación se escribe sola y

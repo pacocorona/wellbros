@@ -23,6 +23,17 @@
  *    tener lados. El desplazamiento horizontal va DENTRO de la tarjeta, nunca
  *    envolviéndola: si envolviera, las esquinas redondeadas se perderían en
  *    cuanto la retícula desbordara.
+ *
+ * 4. DENTRO DE ESA MISMA TARJETA VIVEN LAS DOS VISTAS: la retícula de siete
+ *    columnas de 768 px para arriba y las tarjetas de semana (`WeekCards`) por
+ *    debajo. La conmutación es CSS —`hidden md:block` / `md:hidden`— y no
+ *    JavaScript que mida la ventana: el servidor pinta las dos, el navegador
+ *    enseña la que toca y no hay ni parpadeo ni desajuste al hidratar.
+ *
+ *    Que las dos cuelguen de aquí no es capricho de organización: el riel de
+ *    color, el marco y la LEYENDA se pintan UNA sola vez, fuera de la
+ *    conmutación. Si cada vista trajera la suya, tarde o temprano una diría
+ *    algo que la otra no.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -44,6 +55,7 @@ import { cn } from "@/lib/utils";
 
 import { Legend } from "./legend";
 import { NON_ACTIONABLE, type MonthGridProps, type WeekView } from "./types";
+import { WeekCards } from "./week-cards";
 import { WeekSegment } from "./week-segment";
 
 const COLUMNS = 7;
@@ -70,6 +82,8 @@ export function MonthGrid({
   onSelectWeek,
   isWeekActionable,
   showLegend = true,
+  hoyISO,
+  zonaHoraria,
   color = DEFAULT_PROPERTY_COLOR,
   className,
 }: MonthGridColorProps) {
@@ -197,62 +211,82 @@ export function MonthGrid({
       />
 
       <div className="p-3 sm:p-4">
-        <div className="overflow-x-auto">
-          <div className="min-w-[40rem]">
-            <div
-              role="grid"
-              aria-label={`Calendario de ${monthTitle(month)}`}
-              aria-rowcount={rows.length + 1}
-              aria-colcount={COLUMNS}
-            >
-              <div role="row" className="mb-1.5 grid grid-cols-7">
-                {WEEKDAY_HEADINGS.map((dia, i) => (
+        {/* LA RETÍCULA — de 768 px para arriba. Debajo de ese ancho la partición
+            en dos tramos obliga a arrastrar de lado, así que cede el sitio a las
+            tarjetas. `hidden` es display:none, o sea que tampoco la anuncian los
+            lectores de pantalla: nunca hay dos calendarios a la vez en el árbol
+            de accesibilidad. */}
+        <div className="hidden md:block">
+          <div className="overflow-x-auto">
+            <div className="min-w-[40rem]">
+              <div
+                role="grid"
+                aria-label={`Calendario de ${monthTitle(month)}`}
+                aria-rowcount={rows.length + 1}
+                aria-colcount={COLUMNS}
+              >
+                <div role="row" className="mb-1.5 grid grid-cols-7">
+                  {WEEKDAY_HEADINGS.map((dia, i) => (
+                    <div
+                      key={dia}
+                      role="columnheader"
+                      className={cn(
+                        "py-1 text-center font-mono text-[0.66rem] tracking-[0.08em]",
+                        i === FRIDAY_COLUMN
+                          ? // El viernes abre la semana reservable: se marca.
+                            "font-semibold text-[var(--wb-accent,#0E7490)] dark:text-[var(--wb-accent,#3FC1D3)]"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {dia}
+                    </div>
+                  ))}
+                </div>
+
+                {rows.map((row, i) => (
                   <div
-                    key={dia}
-                    role="columnheader"
-                    className={cn(
-                      "py-1 text-center font-mono text-[0.66rem] tracking-[0.08em]",
-                      i === FRIDAY_COLUMN
-                        ? // El viernes abre la semana reservable: se marca.
-                          "font-semibold text-[var(--wb-accent,#0E7490)] dark:text-[var(--wb-accent,#3FC1D3)]"
-                        : "text-muted-foreground",
-                    )}
+                    key={row.segments[0]?.days[0]?.date ?? i}
+                    role="row"
+                    className="mb-[0.45rem] grid grid-cols-7"
                   >
-                    {dia}
+                    {row.segments.map((segment) => (
+                      <WeekSegment
+                        // El tramo largo y el corto de una misma semana comparten
+                        // weekKey, así que la clave lleva también el span.
+                        key={`${segment.weekKey}-${segment.span}`}
+                        segment={segment}
+                        highlighted={hoveredWeekKey === segment.weekKey}
+                        focusedDate={rovingDate}
+                        actionable={actionable(segment.week)}
+                        onHoverWeek={setHoveredWeekKey}
+                        onSelect={onSelectWeek}
+                        onCellKeyDown={handleCellKeyDown}
+                        registerCell={registerCell}
+                      />
+                    ))}
                   </div>
                 ))}
               </div>
-
-              {rows.map((row, i) => (
-                <div
-                  key={row.segments[0]?.days[0]?.date ?? i}
-                  role="row"
-                  className="mb-[0.45rem] grid grid-cols-7"
-                >
-                  {row.segments.map((segment) => (
-                    <WeekSegment
-                      // El tramo largo y el corto de una misma semana comparten
-                      // weekKey, así que la clave lleva también el span.
-                      key={`${segment.weekKey}-${segment.span}`}
-                      segment={segment}
-                      highlighted={hoveredWeekKey === segment.weekKey}
-                      focusedDate={rovingDate}
-                      actionable={actionable(segment.week)}
-                      onHoverWeek={setHoveredWeekKey}
-                      onSelect={onSelectWeek}
-                      onCellKeyDown={handleCellKeyDown}
-                      registerCell={registerCell}
-                    />
-                  ))}
-                </div>
-              ))}
             </div>
           </div>
         </div>
 
-        {/* La leyenda va DENTRO de la tarjeta pero FUERA del desplazamiento
-            horizontal: explica lo que se ve y debe poder reflowar en móvil en
-            lugar de irse a buscar a la derecha. */}
+        {/* LAS TARJETAS — por debajo de 768 px. Mismas filas, misma tabla de
+            colores y el mismo `onSelectWeek`: lo que cambia es la forma, no la
+            conversación con el padre. */}
+        <WeekCards
+          month={month}
+          rows={rows}
+          onSelectWeek={onSelectWeek}
+          isWeekActionable={isWeekActionable}
+          hoyISO={hoyISO}
+          zonaHoraria={zonaHoraria}
+          className="md:hidden"
+        />
+
+        {/* La leyenda va DENTRO de la tarjeta pero FUERA de la conmutación y del
+            desplazamiento horizontal: explica las DOS vistas y debe poder
+            reflowar en móvil en lugar de irse a buscar a la derecha. */}
         {showLegend ? (
           <Legend
             availabilities={availabilities}

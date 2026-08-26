@@ -9,6 +9,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { RegistrarSW } from "@/components/registrar-sw";
 import { ThemeProvider, type Theme } from "@/components/theme-provider";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -31,9 +32,54 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/**
+ * El `<link rel="manifest">` NO se declara aquí: lo inyecta Next por la
+ * convención de archivo `src/app/manifest.ts`. Añadirlo a mano duplicaría la
+ * etiqueta.
+ */
 export const metadata: Metadata = {
   title: "Wellbros",
   description: "Reserva de semanas en las propiedades compartidas.",
+
+  // Nombre de la aplicación instalada para los navegadores de escritorio.
+  applicationName: "Wellbros",
+
+  /**
+   * iOS: el caso restrictivo.
+   *
+   * Safari no lee el manifiesto para decidir cómo se abre lo que hay en la
+   * pantalla de inicio. Necesita SUS etiquetas, y sin ellas «Añadir a inicio»
+   * crea un acceso directo que abre el sitio en una pestaña normal, con barra
+   * de direcciones incluida: la aplicación no se ve instalada, se ve como un
+   * marcador. `title` es lo que se lee debajo del icono —de ahí que sea el
+   * nombre corto y no el largo— y `statusBarStyle: "default"` deja el
+   * contenido por debajo de la barra de estado; `black-translucent` lo metería
+   * por debajo del reloj y de la muesca, y esta interfaz no está preparada
+   * para eso (nada usa `env(safe-area-inset-top)`).
+   */
+  appleWebApp: {
+    capable: true,
+    title: "Wellbros",
+    statusBarStyle: "default",
+  },
+
+  icons: {
+    // El icono de la pantalla de inicio en iOS. No sale del manifiesto: Safari
+    // solo mira `apple-touch-icon`, y si no lo encuentra usa una captura de la
+    // página, que queda ilegible. 180×180 sería el tamaño exacto de iOS; se le
+    // da el de 192, que iOS reescala sin problema, para no cargar el proyecto
+    // con un cuarto archivo casi idéntico. Va a sangre y opaco a propósito:
+    // iOS le pone él mismo las esquinas redondeadas.
+    apple: [{ url: "/icono-192.png", sizes: "192x192", type: "image/png" }],
+  },
+
+  other: {
+    // Next 16 solo emite `mobile-web-app-capable`, que es el nombre moderno.
+    // Safari lo entiende a partir de iOS 17; los iPhone que se quedaron en
+    // iOS 15 o 16 —que en un grupo familiar los hay— siguen necesitando el
+    // nombre antiguo. Duplicar la etiqueta no molesta a nadie.
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {
@@ -146,6 +192,10 @@ export default async function RootLayout({
         >
           {children}
         </ThemeProvider>
+        {/* No pinta nada; registra el service worker (y en desarrollo lo
+            retira). Va al final del <body> porque su trabajo empieza después
+            de la carga y no debe competir con la primera pintada. */}
+        <RegistrarSW />
       </body>
     </html>
   );

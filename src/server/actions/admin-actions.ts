@@ -59,6 +59,7 @@ import {
   hoyDeNegocio,
   isAdminError,
   isoDeFecha,
+  reinviteUser,
   setUserActive,
   updateUser,
   type AdminActor,
@@ -66,6 +67,7 @@ import {
   type AdminUserRow,
   type FutureReservationRef,
   type SetUserActiveResult,
+  type UserDelivery,
 } from "@/server/admin/users";
 import { clientIpFromHeaders } from "@/server/auth/login";
 
@@ -187,26 +189,38 @@ export interface EntradaCrearUsuario {
   phone?: string | null;
   whatsappOptIn?: boolean;
   role?: UserRole;
+  /** Por omisión, invitación por correo. */
+  delivery?: UserDelivery;
 }
 
 export interface CrearUsuarioSalida {
   user: AdminUserRow;
+  delivery: UserDelivery;
   /**
    * Contraseña temporal en claro. Viaja UNA vez, en esta respuesta, para que la
    * superusuaria la copie y la entregue por un canal seguro. No se guarda ni se
-   * envía por correo.
+   * envía por correo. Nula cuando la entrega fue por invitación.
    */
   temporaryPassword: string | null;
+  /**
+   * Cuántos avisos quedaron en la cola. CERO ES INFORMACIÓN, no un fallo: el
+   * alta se guardó igual, pero el correo no salió —el canal está apagado en
+   * `notification_channels`— y la pantalla tiene que decirlo, porque si no la
+   * persona invitada nunca recibirá nada y nadie sabrá por qué.
+   */
+  notified: number;
+  /** Cuándo caduca el enlace, cuando lo hubo. */
+  invitationExpiresAt: Date | null;
 }
 
 /**
- * Alta de usuario con contraseña temporal.
+ * Alta de usuario.
  *
- * La entrega por invitación (`InvitationDelivery` en el servicio) NO se ofrece:
- * exige un identificador y una ruta con token de alta, y en el modelo de datos
- * todavía no existe tabla de invitaciones que los emita ni pantalla que los
- * canjee. Construir aquí un enlace inventado mandaría un correo con una promesa
- * que no lleva a ninguna parte. Ver el resumen de la tarea.
+ * La vía de entrega la elige la pantalla, pero el ENLACE no viene nunca del
+ * cliente: lo emite el servicio (`issueAccessToken`) dentro de su propia
+ * transacción. Aceptar aquí una ruta enviada por quien hace el POST sería
+ * dejarle decidir a dónde apunta el enlace del correo de alta, que es la
+ * definición de un correo de phishing firmado por nosotros.
  */
 export async function crearUsuarioAction(
   entrada: EntradaCrearUsuario,
@@ -222,9 +236,10 @@ export async function crearUsuarioAction(
         phone: entrada.phone ?? null,
         whatsappOptIn: entrada.whatsappOptIn ?? false,
         role: entrada.role ?? "USER",
-        // Deliberadamente sin `invitation`: aceptar una ruta que viene del
-        // cliente sería dejar que quien haga el POST decida a dónde apunta el
-        // enlace del correo de alta.
+        // El tipo es una AYUDA, no una garantía: una Server Action es un
+        // endpoint público. Quien valida de verdad es el esquema del servicio,
+        // que traduce cualquier otra cosa a INVALID_INPUT.
+        delivery: entrada.delivery ?? "INVITACION",
       },
     });
 
@@ -235,7 +250,44 @@ export async function crearUsuarioAction(
 
     return {
       user: resultado.user,
+      delivery: resultado.delivery,
       temporaryPassword: resultado.temporaryPassword ?? null,
+      notified: resultado.notified,
+      invitationExpiresAt: resultado.invitation?.expiresAt ?? null,
+    };
+  });
+}
+
+export interface ReenviarInvitacionSalida {
+  notified: number;
+  invitationExpiresAt: Date;
+  expiresInLabel: string;
+}
+
+/**
+ * Reenvía la invitación con un enlace nuevo y mata el anterior.
+ *
+ * Para el caso corriente: el enlace caducó, el correo se perdió o la persona lo
+ * borró sin querer. Solo funciona con cuentas que todavía no han entrado; el
+ * servicio rechaza las demás con INVALID_INPUT y su mensaje ya redactado.
+ */
+export async function reenviarInvitacionAction(
+  userId: string,
+): Promise<Resultado<ReenviarInvitacionSalida>> {
+  return ejecutar(async ({ actor, ip }) => {
+    const resultado = await reinviteUser({
+      db: prisma,
+      actor,
+      ip,
+      userId: exigirUuid(userId, "usuario"),
+    });
+
+    revalidatePath(RUTA_USUARIOS);
+
+    return {
+      notified: resultado.notified,
+      invitationExpiresAt: resultado.invitation.expiresAt,
+      expiresInLabel: resultado.invitation.expiresInLabel,
     };
   });
 }

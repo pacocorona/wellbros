@@ -188,6 +188,28 @@ function arreglo(d: Detalles, clave: string): readonly unknown[] {
   return Array.isArray(v) ? v : [];
 }
 
+/**
+ * El «por qué» que manda Resend, listo para pegar en la nota de la fila.
+ *
+ * Viene del proveedor, así que llega en inglés y de longitud imprevisible
+ * («Mailbox does not exist», o un volcado SMTP entero). Se recorta para que una
+ * fila no se convierta en un párrafo; el motivo íntegro sigue en el snapshot,
+ * que es la evidencia. Devuelve `null` cuando no hay motivo, para que el
+ * llamador lo descarte del renglón en vez de escribir «Motivo: null».
+ */
+const MAX_MOTIVO = 140;
+
+function motivoDelCorreo(d: Detalles): string | null {
+  const motivo = texto(d, "motivo");
+  if (motivo === null) return null;
+
+  const limpio = motivo.trim().replace(/\s+/g, " ");
+  const recortado =
+    limpio.length > MAX_MOTIVO ? `${limpio.slice(0, MAX_MOTIVO - 1)}…` : limpio;
+
+  return `Motivo del proveedor: «${recortado}».`;
+}
+
 /** La semana tal como se redactó el día del hecho; si no la hay, se recompone. */
 function semanaDe(d: Detalles): string {
   const redactada = texto(d, "weekLabel");
@@ -229,6 +251,9 @@ const ETIQUETA_ACCION: Readonly<Record<string, string>> = {
   MAINTENANCE_NOTE_UPDATED: "Nota de mantenimiento editada",
   MAINTENANCE_NOTE_DELETED: "Nota de mantenimiento borrada",
   BOOKING_POLICY_UPDATED: "Ventana de apertura editada",
+  EMAIL_BOUNCED: "Correo rebotado",
+  EMAIL_COMPLAINED: "Marcado como no deseado",
+  EMAIL_DELIVERY_FAILED: "Correo no entregado",
   LOGIN_SUCCEEDED: "Acceso",
   LOGIN_FAILED: "Acceso fallido",
   LOGOUT: "Cierre de sesión",
@@ -287,6 +312,11 @@ const FAMILIAS: ReadonlyArray<{
       "MAINTENANCE_NOTE_DELETED",
       "BOOKING_POLICY_UPDATED",
     ],
+  },
+  {
+    clave: "correo",
+    titulo: "Correo",
+    acciones: ["EMAIL_BOUNCED", "EMAIL_COMPLAINED", "EMAIL_DELIVERY_FAILED"],
   },
   {
     clave: "accesos",
@@ -668,6 +698,60 @@ function describir(entrada: AuditEntryRow): Descripcion {
 
     case "LOGOUT":
       return { frase: `${quien} cerró sesión`, sobreQue: correo ?? "", nota: null };
+
+    // ── Correo ────────────────────────────────────────────────────────────
+    //
+    // Estas tres las escribe el webhook de Resend, no una persona: `actor` es
+    // nulo siempre. Por eso NO se usa `quien` —diría «Alguien», que sugiere una
+    // mano humana donde no la hubo— y el sujeto es el proveedor. La dirección
+    // viaja en `direccion`, no en `email`, porque puede no corresponder a
+    // ningún usuario de la casa.
+    case "EMAIL_BOUNCED": {
+      const direccion = texto(d, "direccion");
+      const permanente = bandera(d, "permanente");
+      const descartados = entero(d, "avisosDescartados") ?? 0;
+      return {
+        frase: `Rebotó el correo a ${direccion ?? "una dirección"}`,
+        sobreQue: direccion ?? "",
+        nota: [
+          permanente
+            ? "Rebote permanente: se dejó de escribir a esa dirección."
+            : "Rebote pasajero: se le sigue escribiendo.",
+          descartados > 0
+            ? `Se descartaron ${descartados} ${descartados === 1 ? "aviso pendiente" : "avisos pendientes"}.`
+            : null,
+          motivoDelCorreo(d),
+        ]
+          .filter((p): p is string => p !== null)
+          .join(" "),
+      };
+    }
+
+    case "EMAIL_COMPLAINED": {
+      const direccion = texto(d, "direccion");
+      const descartados = entero(d, "avisosDescartados") ?? 0;
+      return {
+        frase: `${direccion ?? "Un destinatario"} marcó los avisos como correo no deseado`,
+        sobreQue: direccion ?? "",
+        nota: [
+          "Solo se le seguirán enviando los avisos esenciales.",
+          descartados > 0
+            ? `Se descartaron ${descartados} ${descartados === 1 ? "aviso pendiente" : "avisos pendientes"}.`
+            : null,
+        ]
+          .filter((p): p is string => p !== null)
+          .join(" "),
+      };
+    }
+
+    case "EMAIL_DELIVERY_FAILED": {
+      const direccion = texto(d, "direccion");
+      return {
+        frase: `No se pudo entregar el correo a ${direccion ?? "una dirección"}`,
+        sobreQue: direccion ?? "",
+        nota: motivoDelCorreo(d),
+      };
+    }
 
     default:
       // Acción nueva todavía sin frase. Se dice lo que se sabe y el

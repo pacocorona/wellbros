@@ -27,9 +27,24 @@
  *    programada mide el desfase con el navegador al cargar y trabaja con él. Un
  *    portátil con la hora adelantada no puede decir "ya abrió" antes de tiempo
  *    (§07).
+ *
+ * 4. EL CALENDARIO ESCUCHA. `useLiveCalendar` avisa de que algo cambió en la
+ *    propiedad en pantalla y aquí se responde con `router.refresh()`: el evento
+ *    solo dice "mira otra vez", nunca trae datos. Así el servidor sigue siendo
+ *    la única fuente de la verdad y no hay dos formas de pintar una semana.
+ *
+ * (La conmutación entre la retícula y las tarjetas de móvil NO se decide aquí:
+ * es CSS dentro de `MonthGrid`. Ver el encabezado de month-grid.tsx.)
  */
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { CalendarRange } from "lucide-react";
 import { toast } from "sonner";
@@ -50,6 +65,10 @@ import {
   DEFAULT_PROPERTY_COLOR,
   propertyColorStyle,
 } from "@/lib/property-color";
+// El hook del canal en vivo lo entrega otro agente con esta firma exacta:
+//   useLiveCalendar({ propertyId, onCambio }) => { conectado }
+import { useLiveCalendar } from "@/lib/use-live-calendar";
+import { cn } from "@/lib/utils";
 import {
   cancelarReserva,
   cederDias,
@@ -329,9 +348,44 @@ export function CalendarView({
     });
   };
 
-  const refrescar = () => {
+  const refrescar = useCallback(() => {
     iniciarNavegacion(() => router.refresh());
-  };
+  }, [router]);
+
+  /* ---------------------------------------------------------------- en vivo */
+
+  /**
+   * Lo ocupado que está esto, en un ref.
+   *
+   * `alCambiarEnVivo` tiene que ser ESTABLE: no sé si el hook guarda la función
+   * en un ref o la mete en las dependencias de su efecto, y si es lo segundo,
+   * una identidad nueva en cada render reabriría la conexión en cada render.
+   * Estable y leyendo el ref, la función no caduca y la conexión no se toca.
+   */
+  const ocupadoRef = useRef(ocupado);
+  useEffect(() => {
+    ocupadoRef.current = ocupado;
+  }, [ocupado]);
+
+  /**
+   * Llega un aviso de que algo cambió en esta propiedad: se vuelve a pedir la
+   * página. El evento no trae datos —solo dice "mira otra vez"— y así el
+   * calendario nunca se pinta con dos verdades distintas.
+   *
+   * Con una acción en vuelo se ignora: refrescar en ese momento borraría la
+   * capa optimista y la semana parpadearía a su estado anterior justo antes de
+   * confirmarse. No se pierde nada, porque toda acción termina con su propio
+   * `revalidatePath("/")`.
+   */
+  const alCambiarEnVivo = useCallback(() => {
+    if (ocupadoRef.current) return;
+    refrescar();
+  }, [refrescar]);
+
+  const { conectado } = useLiveCalendar({
+    propertyId: propiedadId,
+    onCambio: alCambiarEnVivo,
+  });
 
   const confirmarReserva = async (motivoExcepcion?: string) => {
     const semana = semanaDialogo;
@@ -580,15 +634,47 @@ export function CalendarView({
         rows={filasVisibles}
         onSelectWeek={seleccionarSemana}
         isWeekActionable={semanaAccionable}
+        // Los dos datos que la vista de tarjetas necesita para etiquetar la
+        // semana del borde del mes, la única cuyo tramo largo cae fuera.
+        hoyISO={hoyISO}
+        zonaHoraria={zonaHoraria}
         color={colorPropiedad}
         className={ocupadoONavegando ? "opacity-70 transition-opacity" : undefined}
       />
 
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <CalendarRange className="size-3.5" aria-hidden />
-        Cada semana va de viernes 00:00 a jueves 23:59. Toca cualquiera de los
-        dos tramos para actuar sobre la semana entera.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <CalendarRange className="size-3.5 shrink-0" aria-hidden />
+          <span>
+            Cada semana va de viernes 00:00 a jueves 23:59.{" "}
+            {/* La frase cambia con la vista, y por las mismas clases que la
+                cambian a ella: en móvil no hay dos tramos que tocar. */}
+            <span className="hidden md:inline">
+              Toca cualquiera de los dos tramos para actuar sobre la semana
+              entera.
+            </span>
+            <span className="md:hidden">
+              Toca una tarjeta para actuar sobre la semana entera.
+            </span>
+          </span>
+        </p>
+
+        {/* Señal de que el calendario se está actualizando solo. Discreta a
+            propósito: un punto y dos palabras. Sin `aria-live`, porque una
+            reconexión no es una noticia que merezca interrumpir a nadie. */}
+        <p className="flex shrink-0 items-center gap-1.5 text-[0.7rem] text-muted-foreground">
+          <i
+            aria-hidden
+            className={cn(
+              "size-1.5 shrink-0 rounded-full",
+              conectado
+                ? "bg-[var(--wb-open-bd,#2F9E5B)] dark:bg-[var(--wb-open-bd,#34C56F)]"
+                : "bg-current opacity-40",
+            )}
+          />
+          {conectado ? "En vivo" : "Sin conexión en vivo"}
+        </p>
+      </div>
 
       {/* Solo para la superusuaria: para USER normal este diálogo no se monta
           siquiera, y su clic sigue yendo directo a reservar o a la hoja. */}

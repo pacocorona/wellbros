@@ -27,6 +27,7 @@ import {
 import { businessToday, DEFAULT_BOOKING_WINDOW } from "@/lib/booking-window";
 import type { Db } from "@/lib/db";
 import { enqueueNotification } from "@/lib/notifications/dispatch";
+import { issueAccessToken } from "@/server/auth/tokens";
 
 // ═══════════════════════════════════════════════ núcleo compartido
 
@@ -200,32 +201,23 @@ const telefonoSchema = z
 const rolSchema = z.enum(["SUPERUSER", "USER"]);
 
 /**
- * Entrega por invitación.
+ * Cómo recibe la cuenta su primera llave.
  *
- * El token y su caducidad NO se generan aquí: la base no tiene tabla de
- * invitaciones (ver esquema), así que quien tenga ese mecanismo pasa la ruta ya
- * construida. Preferimos exigirla a inventar un enlace que el correo prometería
- * y que no llevaría a ninguna parte.
+ *  · `INVITACION` — sale un correo con un enlace que caduca y que solo sirve
+ *    una vez. La cuenta nace SIN contraseña utilizable: la primera que existe
+ *    la escribe su dueña, y nadie más llega a conocerla nunca.
+ *  · `CONTRASENA_TEMPORAL` — la pantalla muestra una contraseña de un solo uso
+ *    que la administradora tiene que dictar. Se conserva porque hay casos
+ *    reales en los que la otra vía no sirve: alguien sin correo, un envío que
+ *    rebota, una dirección mal escrita. Es peor y por eso no es la opción por
+ *    omisión: la contraseña viaja por un canal que no controlamos, queda
+ *    escrita donde se mandó y la conocen dos personas hasta que se cambie.
+ *    Quien entra así llega a /cambiar-contrasena y no sale de ahí hasta elegir
+ *    la suya.
  */
-export interface InvitationDelivery {
-  /** Identificador del ENLACE (no del usuario): es la entidad de la clave de deduplicación. */
-  invitationId: string;
-  /** Ruta relativa con el token de alta de contraseña, p. ej. `/invitacion/<token>`. */
-  path: string;
-  /** «48 horas»: texto ya redactado, nunca un cálculo hecho al renderizar. */
-  expiresInLabel: string;
-}
+export type UserDelivery = "INVITACION" | "CONTRASENA_TEMPORAL";
 
-const invitacionSchema = z.object({
-  invitationId: z.uuid("El identificador de invitación debe ser un uuid"),
-  path: z
-    .string()
-    .trim()
-    // Relativa a la aplicación: una URL absoluta en un correo de alta es el
-    // vector clásico de phishing, y el worker ya antepone APP_BASE_URL.
-    .regex(/^\/[^\s]*$/, "La ruta de invitación debe ser relativa y empezar con /"),
-  expiresInLabel: z.string().trim().min(1, "Falta el texto de caducidad"),
-});
+const entregaSchema = z.enum(["INVITACION", "CONTRASENA_TEMPORAL"]);
 
 export interface CreateUserInput {
   email: string;
@@ -233,8 +225,8 @@ export interface CreateUserInput {
   phone?: string | null;
   whatsappOptIn?: boolean;
   role?: UserRole;
-  /** Si se omite, se genera una contraseña temporal y se devuelve UNA vez. */
-  invitation?: InvitationDelivery;
+  /** Por omisión, invitación por correo. */
+  delivery?: UserDelivery;
 }
 
 const crearUsuarioSchema = z
@@ -244,7 +236,7 @@ const crearUsuarioSchema = z
     phone: telefonoSchema.nullish(),
     whatsappOptIn: z.boolean().default(false),
     role: rolSchema.default("USER"),
-    invitation: invitacionSchema.optional(),
+    delivery: entregaSchema.default("INVITACION"),
   })
   .refine((v) => !v.whatsappOptIn || Boolean(v.phone), {
     message: "Para avisos por WhatsApp hace falta un teléfono en E.164",
@@ -262,8 +254,46 @@ export interface AdminUserRow {
   createdAt: Date;
   /** Reservas ACTIVE (pasadas y futuras): lo que se pierde al dar de baja. */
   activeReservations: number;
+  /**
+   * La cuenta se creó por invitación y su dueña todavía NO ha canjeado el
+   * enlace: no tiene contraseña utilizable y nunca ha entrado.
+   *
+   * Es el dato que decide si tiene sentido ofrecer «reenviar invitación», y
+   * también la respuesta a la pregunta que la administración se hace de verdad
+   * mirando la lista: «¿a quién le falta entrar?».
+   */
+  pendingInvitation: boolean;
 }
 
+/**
+ * Marca de «esta cuenta no tiene contraseña».
+ *
+ * No es un hash de Argon2 y no puede serlo: no empieza por `$argon2id$` ni
+ * tiene la forma PHC que el verificador sabe leer. Al comprobarla, `verify`
+ * revienta al analizarla y `verifyPassword` (@/lib/auth/password) traduce ese
+ * fallo a `false`, que es justo lo que queremos: NINGUNA contraseña verifica
+ * contra este valor. La única forma de abrir la cuenta es el enlace.
+ *
+ * Por qué un centinela y no un hash aleatorio de verdad: un hash de 32 bytes
+ * que nadie conoce sería igual de seguro, pero cuesta unos 200 ms de Argon2 por
+ * alta y, sobre todo, no se distingue de una contraseña real al mirar la tabla.
+ * Con esto, «¿quién no ha entrado todavía?» es una comparación de igualdad.
+ *
+ * Y por qué no una columna nula: `password_hash` es NOT NULL en toda la base y
+ * en todo el código que la lee; admitir nulos obligaría a comprobarlo en cada
+ * punto que hoy da por hecho que hay texto, y el punto olvidado sería un login
+ * que no valida nada.
+ */
+const SIN_CONTRASENA = "sin-contrasena";
+
+/**
+ * Columnas que se leen para armar una fila de administración.
+ *
+ * `passwordHash` ENTRA aquí pero NO SALE de este archivo: `aFilaAdmin` lo
+ * traduce a un booleano y construye la fila campo a campo. Esa construcción
+ * explícita es la razón de que se pueda leer sin miedo — con un `...spread` el
+ * hash acabaría en el cliente el día que alguien añada un `select` nuevo.
+ */
 const SELECCION_USUARIO = {
   id: true,
   email: true,
@@ -273,7 +303,37 @@ const SELECCION_USUARIO = {
   role: true,
   isActive: true,
   createdAt: true,
+  passwordHash: true,
 } as const;
+
+/** Lo que devuelve una consulta con `SELECCION_USUARIO`. */
+type FilaCruda = {
+  id: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  whatsappOptIn: boolean;
+  role: UserRole;
+  isActive: boolean;
+  createdAt: Date;
+  passwordHash: string;
+};
+
+/** Registro de la base → fila de la interfaz. El hash se queda aquí dentro. */
+function aFilaAdmin(fila: FilaCruda, activeReservations: number): AdminUserRow {
+  return {
+    id: fila.id,
+    email: fila.email,
+    fullName: fila.fullName,
+    phone: fila.phone,
+    whatsappOptIn: fila.whatsappOptIn,
+    role: fila.role,
+    isActive: fila.isActive,
+    createdAt: fila.createdAt,
+    activeReservations,
+    pendingInvitation: fila.passwordHash === SIN_CONTRASENA,
+  };
+}
 
 export interface ListUsersInput {
   db: Db;
@@ -326,34 +386,61 @@ export async function listUsers({
   });
   const porUsuario = new Map(conteos.map((c) => [c.userId, c._count._all]));
 
-  return usuarios.map((u) => ({ ...u, activeReservations: porUsuario.get(u.id) ?? 0 }));
+  return usuarios.map((u) => aFilaAdmin(u, porUsuario.get(u.id) ?? 0));
+}
+
+/** Lo que hay que saber del enlace recién emitido, SIN el token en claro. */
+export interface InvitationSummary {
+  /** Identificador de la fila de `access_tokens`; entidad de la clave de dedupe. */
+  id: string;
+  expiresAt: Date;
+  /** «48 horas». */
+  expiresInLabel: string;
 }
 
 export interface CreateUserResult {
   user: AdminUserRow;
+  delivery: UserDelivery;
   /**
    * Contraseña temporal EN CLARO. Solo existe en esta respuesta: nunca se
    * guarda ni se manda por correo (§seguridad: debe viajar por gestor de
    * contraseñas). Ausente cuando la entrega fue por invitación.
    */
   temporaryPassword?: string;
+  /**
+   * Datos del enlace de alta, cuando la entrega fue por invitación.
+   *
+   * NO incluye el token: el enlace se manda por correo y punto. Devolverlo aquí
+   * lo pondría en la pantalla de quien da de alta, y de ahí volvería a salir
+   * por WhatsApp — que es exactamente el canal del que esta funcionalidad
+   * pretende sacar la primera llave.
+   */
+  invitation?: InvitationSummary;
   /** Filas encoladas en el outbox (0 si no hubo invitación). */
   notified: number;
 }
 
 /**
  * Alta de usuario. No hay registro público: siempre la crea la superusuaria.
+ *
+ * TODO EL ALTA CABE EN UNA SOLA TRANSACCIÓN: la cuenta, el token de invitación,
+ * la entrada de bitácora y el correo encolado. O quedan las cuatro cosas o no
+ * queda ninguna. Sin eso caben dos ruinas concretas: una cuenta sin contraseña
+ * utilizable y sin enlace que la abra (nadie puede entrar nunca), o un correo
+ * prometiendo un enlace cuya fila se deshizo.
  */
 export async function createUser({
   db,
   actor,
   input,
   ip,
+  now = new Date(),
 }: {
   db: Db;
   actor: AdminActor;
   input: CreateUserInput;
   ip?: string | null;
+  now?: Date;
 }): Promise<CreateUserResult> {
   assertSuperuser(actor);
   const datos = parseOrThrow(crearUsuarioSchema, input);
@@ -366,13 +453,15 @@ export async function createUser({
     throw new AdminError("EMAIL_TAKEN", `Ya hay una cuenta con el correo ${datos.email}.`);
   }
 
-  // Con invitación, la contraseña inicial es un valor aleatorio que NADIE
-  // conoce: la cuenta solo se abre por el enlace. Sin invitación, se genera una
-  // temporal y se devuelve una sola vez.
-  const temporal = datos.invitation ? null : contrasenaTemporal();
-  const passwordHash = await hashPassword(temporal ?? randomBytes(32).toString("base64url"));
+  const porInvitacion = datos.delivery === "INVITACION";
 
-  const { usuario, notificados } = await db.$transaction(async (tx) => {
+  // Argon2 cuesta ~200 ms y se paga ANTES de abrir la transacción, no dentro:
+  // una transacción abierta ese tiempo sostiene bloqueos para nada. Por
+  // invitación no se paga en absoluto — la cuenta nace con el centinela.
+  const temporal = porInvitacion ? null : contrasenaTemporal();
+  const passwordHash = temporal === null ? SIN_CONTRASENA : await hashPassword(temporal);
+
+  const { usuario, notificados, invitacion } = await db.$transaction(async (tx) => {
     const creado = await tx.user.create({
       data: {
         email: datos.email,
@@ -383,13 +472,23 @@ export async function createUser({
         role: datos.role,
         // Solo con contraseña temporal. Es la única de las dos entregas en la
         // que alguien más llega a saber la contraseña —hay que dictarla— y por
-        // tanto la única que hay que obligar a cambiar. Con invitación, la
-        // contraseña inicial es un valor aleatorio que nadie ha visto nunca y
-        // quien abre la cuenta ya elige la suya en el enlace.
+        // tanto la única que hay que obligar a cambiar. Con invitación no hay
+        // contraseña que cambiar: la primera que exista la escribe su dueña al
+        // canjear el enlace, y llega al calendario sin pasar por esa pantalla.
         mustChangePassword: temporal !== null,
       },
       select: SELECCION_USUARIO,
     });
+
+    const enlace = porInvitacion
+      ? await issueAccessToken(tx, {
+          userId: creado.id,
+          purpose: "INVITACION",
+          createdById: actor.id,
+          ip,
+          now,
+        })
+      : null;
 
     await writeAudit(tx, {
       action: "USER_CREATED",
@@ -401,59 +500,93 @@ export async function createUser({
         email: creado.email,
         fullName: creado.fullName,
         role: creado.role,
-        entrega: datos.invitation ? "INVITACION" : "CONTRASENA_TEMPORAL",
-        invitationId: datos.invitation?.invitationId ?? null,
+        entrega: datos.delivery,
+        // El identificador del enlace, JAMÁS el enlace ni el token: la bitácora
+        // la lee la superusuaria en pantalla y un token ahí sería una llave a
+        // la vista. Con el id basta para cruzar con `access_tokens` y saber si
+        // se usó y cuándo.
+        invitationId: enlace?.id ?? null,
       },
     });
 
-    const notificados = datos.invitation
+    const notificados = enlace
       ? await enqueueNotification(tx, {
           eventType: "USER_INVITED",
           payload: {
-            invitationId: datos.invitation.invitationId,
+            invitationId: enlace.id,
             userId: creado.id,
             fullName: creado.fullName,
             invitedByName: actor.fullName,
-            path: datos.invitation.path,
-            expiresInLabel: datos.invitation.expiresInLabel,
+            path: enlace.path,
+            expiresInLabel: enlace.expiresInLabel,
           },
           recipientUserIds: [creado.id],
         })
       : 0;
 
-    return { usuario: creado, notificados };
+    return { usuario: creado, notificados, invitacion: enlace };
   });
 
   return {
-    user: { ...usuario, activeReservations: 0 },
+    user: aFilaAdmin(usuario, 0),
+    delivery: datos.delivery,
     ...(temporal ? { temporaryPassword: temporal } : {}),
+    ...(invitacion
+      ? {
+          invitation: {
+            id: invitacion.id,
+            expiresAt: invitacion.expiresAt,
+            expiresInLabel: invitacion.expiresInLabel,
+          },
+        }
+      : {}),
     notified: notificados,
   };
 }
 
+export interface ReinviteUserResult {
+  invitation: InvitationSummary;
+  /** Filas encoladas en el outbox. Cero significa que el correo está apagado. */
+  notified: number;
+  /** Enlaces anteriores que quedaron inservibles al emitir este. */
+  supersededCount: number;
+}
+
 /**
- * Reenvía la invitación con un enlace nuevo. El token lo genera quien llama
- * (ver `InvitationDelivery`); aquí solo se encola y se deja constancia.
+ * Reenvía la invitación con un enlace NUEVO, para cuando el anterior caducó o
+ * no llegó.
+ *
+ * Emite el token aquí mismo y en la misma transacción que el encolado: el
+ * enlace que promete el correo tiene que existir en la base cuando el correo
+ * salga, y el anterior tiene que morir en ese mismo instante. Si el reenvío se
+ * deshace, el enlace viejo sigue siendo el bueno — que es lo correcto: la
+ * persona no se queda sin ninguno.
+ *
+ * SOLO PARA QUIEN AÚN NO HA ENTRADO. A quien ya tiene contraseña propia no se
+ * le reinvita: el correo de bienvenida le diría que defina la suya, y el enlace
+ * sería, de hecho, un restablecimiento de contraseña hecho por otra persona sin
+ * llamarlo por su nombre. Restablecer es el siguiente encargo y merece su
+ * propio propósito de token, su propia plantilla y su propia entrada de
+ * bitácora.
  */
 export async function reinviteUser({
   db,
   actor,
   userId,
-  invitation,
   ip,
+  now = new Date(),
 }: {
   db: Db;
   actor: AdminActor;
   userId: string;
-  invitation: InvitationDelivery;
   ip?: string | null;
-}): Promise<{ notified: number }> {
+  now?: Date;
+}): Promise<ReinviteUserResult> {
   assertSuperuser(actor);
-  const datos = parseOrThrow(invitacionSchema, invitation);
 
   const usuario = await db.user.findUnique({
     where: { id: userId },
-    select: { id: true, fullName: true, email: true, isActive: true },
+    select: { id: true, fullName: true, email: true, isActive: true, passwordHash: true },
   });
   if (!usuario) throw new AdminError("NOT_FOUND", "El usuario no existe.");
   if (!usuario.isActive) {
@@ -462,31 +595,57 @@ export async function reinviteUser({
       "La cuenta está desactivada: reactívala antes de reinvitarla.",
     );
   }
+  if (usuario.passwordHash !== SIN_CONTRASENA) {
+    throw new AdminError(
+      "INVALID_INPUT",
+      "Esta cuenta ya tiene contraseña propia: la invitación solo se reenvía a quien todavía no ha entrado.",
+    );
+  }
 
   return db.$transaction(async (tx) => {
+    const enlace = await issueAccessToken(tx, {
+      userId: usuario.id,
+      purpose: "INVITACION",
+      createdById: actor.id,
+      ip,
+      now,
+    });
+
     await writeAudit(tx, {
       action: "USER_REINVITED",
       entityType: "USER",
       entityId: usuario.id,
       actorUserId: actor.id,
       ip,
-      details: { email: usuario.email, invitationId: datos.invitationId },
+      details: {
+        email: usuario.email,
+        invitationId: enlace.id,
+        enlacesAnulados: enlace.supersededCount,
+      },
     });
 
     const notified = await enqueueNotification(tx, {
       eventType: "USER_INVITED",
       payload: {
-        invitationId: datos.invitationId,
+        invitationId: enlace.id,
         userId: usuario.id,
         fullName: usuario.fullName,
         invitedByName: actor.fullName,
-        path: datos.path,
-        expiresInLabel: datos.expiresInLabel,
+        path: enlace.path,
+        expiresInLabel: enlace.expiresInLabel,
       },
       recipientUserIds: [usuario.id],
     });
 
-    return { notified };
+    return {
+      invitation: {
+        id: enlace.id,
+        expiresAt: enlace.expiresAt,
+        expiresInLabel: enlace.expiresInLabel,
+      },
+      notified,
+      supersededCount: enlace.supersededCount,
+    };
   });
 }
 
@@ -575,7 +734,7 @@ export async function updateUser({
 
   if (Object.keys(data).length === 0) {
     const [conteo] = await conteosDeReservas(db, [actualUsuario.id]);
-    return { ...actualUsuario, activeReservations: conteo ?? 0 };
+    return aFilaAdmin(actualUsuario, conteo ?? 0);
   }
 
   if (data.role === "USER" && actualUsuario.role === "SUPERUSER") {
@@ -602,7 +761,7 @@ export async function updateUser({
   });
 
   const [conteo] = await conteosDeReservas(db, [actualizado.id]);
-  return { ...actualizado, activeReservations: conteo ?? 0 };
+  return aFilaAdmin(actualizado, conteo ?? 0);
 }
 
 /** Reserva futura de alguien a quien se está dando de baja. */
@@ -665,7 +824,7 @@ export async function setUserActive({
 
   if (usuario.isActive === isActive) {
     return {
-      user: { ...usuario, activeReservations: (await conteosDeReservas(db, [userId]))[0] ?? 0 },
+      user: aFilaAdmin(usuario, (await conteosDeReservas(db, [userId]))[0] ?? 0),
       sessionsClosed: 0,
       futureReservations: futuras,
     };
@@ -709,7 +868,7 @@ export async function setUserActive({
   const sessionsClosed = isActive ? 0 : await destroyAllSessions(userId);
 
   return {
-    user: { ...actualizado, activeReservations: (await conteosDeReservas(db, [userId]))[0] ?? 0 },
+    user: aFilaAdmin(actualizado, (await conteosDeReservas(db, [userId]))[0] ?? 0),
     sessionsClosed,
     futureReservations: futuras,
   };
