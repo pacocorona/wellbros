@@ -8,9 +8,14 @@ Type=simple
 User=wellbros
 Group=wellbros
 WorkingDirectory=/srv/wellbros/app
+# PORT y WELLBROS_NODE salen del .env. Se parametrizan porque este servidor
+# puede compartir máquina con otras aplicaciones: el puerto 3000 puede estar
+# tomado, y actualizar el node del sistema rompería a los demás inquilinos.
+Environment=WELLBROS_NODE=/usr/bin/node
+Environment=PORT=3000
 EnvironmentFile=/srv/wellbros/shared/.env
 # Escucha SOLO en loopback: nginx es el unico que la expone.
-ExecStart=/usr/bin/node node_modules/.bin/next start -p 3000 -H 127.0.0.1
+ExecStart=${WELLBROS_NODE} node_modules/next/dist/bin/next start -p ${PORT} -H 127.0.0.1
 Restart=always
 RestartSec=5
 
